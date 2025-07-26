@@ -19,6 +19,8 @@ export const useAuth = (): AuthContextType => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  console.log('useAuth render - User:', user?.id, 'Loading:', loading);
+
   useEffect(() => {
     let mounted = true;
     
