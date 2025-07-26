@@ -19,7 +19,7 @@ interface LocationSelectorProps {
 }
 
 export const LocationSelector = ({ onLocationSelect, selectedLocation }: LocationSelectorProps) => {
-  const { locations } = useEchoVoice();
+  const { locations, refreshLocations } = useEchoVoice();
   const { toast } = useToast();
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [newLocation, setNewLocation] = useState({
@@ -44,6 +44,9 @@ export const LocationSelector = ({ onLocationSelect, selectedLocation }: Locatio
         .single();
 
       if (error) throw error;
+      
+      // Refresh the locations list
+      await refreshLocations();
       
       setIsAddingLocation(false);
       setNewLocation({

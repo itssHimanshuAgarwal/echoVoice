@@ -343,6 +343,30 @@ export const useEchoVoice = () => {
     }
   }, [currentPerson, toast]);
 
+  // Location management
+  const refreshLocations = useCallback(async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
+      const { data: locationsData } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('user_id', user.user.id)
+        .order('times_used', { ascending: false });
+
+      if (locationsData) {
+        setLocations(locationsData);
+        const defaultLocation = locationsData.find(l => l.is_default);
+        if (defaultLocation && !currentLocation) {
+          setCurrentLocation(defaultLocation);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing locations:', error);
+    }
+  }, [currentLocation]);
+
   return {
     // State
     isLoading,
@@ -363,6 +387,7 @@ export const useEchoVoice = () => {
     stopSpeaking,
     addPerson,
     updatePerson,
+    refreshLocations,
     setCurrentPerson,
     setCurrentLocation,
   };
