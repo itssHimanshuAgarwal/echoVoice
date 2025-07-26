@@ -82,8 +82,12 @@ export const useEchoVoice = () => {
 
   // Load initial data
   const loadInitialData = useCallback(async (userId: string) => {
+    console.log('loadInitialData called with userId:', userId);
     try {
-      if (!userId) return;
+      if (!userId) {
+        console.log('No userId provided, returning');
+        return;
+      }
 
       // Load settings
       const { data: settingsData } = await supabase

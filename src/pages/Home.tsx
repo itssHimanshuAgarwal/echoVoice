@@ -49,9 +49,18 @@ const Home = () => {
   };
 
   useEffect(() => {
+    console.log('Home page - User state:', { 
+      user: user ? { id: user.id, email: user.email } : null, 
+      peopleCount: people.length, 
+      locationsCount: locations.length 
+    });
+    
     // Only load data when user is authenticated
     if (user?.id) {
+      console.log('Loading initial data for user:', user.id);
       loadInitialData(user.id);
+    } else {
+      console.log('No user found, cannot load data');
     }
   }, [loadInitialData, user]);
 
