@@ -26,7 +26,9 @@ const Auth = () => {
 
   // Redirect when user is authenticated (handles OAuth callback)
   useEffect(() => {
+    console.log('Auth page - User:', user, 'Loading:', loading);
     if (user && !loading) {
+      console.log('Redirecting to home page...');
       navigate('/', { replace: true });
     }
   }, [user, loading, navigate]);
