@@ -50,8 +50,8 @@ const Home = () => {
 
   useEffect(() => {
     // Only load data when user is authenticated
-    if (user) {
-      loadInitialData();
+    if (user?.id) {
+      loadInitialData(user.id);
     }
   }, [loadInitialData, user]);
 

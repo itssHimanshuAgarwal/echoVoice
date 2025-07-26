@@ -81,16 +81,15 @@ export const useEchoVoice = () => {
   const { toast } = useToast();
 
   // Load initial data
-  const loadInitialData = useCallback(async () => {
+  const loadInitialData = useCallback(async (userId: string) => {
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return;
+      if (!userId) return;
 
       // Load settings
       const { data: settingsData } = await supabase
         .from('user_settings')
         .select('*')
-        .eq('user_id', user.user.id)
+        .eq('user_id', userId)
         .single();
 
       if (settingsData) {
@@ -110,7 +109,7 @@ export const useEchoVoice = () => {
       const { data: peopleData } = await supabase
         .from('people')
         .select('*')
-        .eq('user_id', user.user.id)
+        .eq('user_id', userId)
         .order('times_interacted', { ascending: false });
 
       if (peopleData) {
@@ -125,7 +124,7 @@ export const useEchoVoice = () => {
       const { data: locationsData } = await supabase
         .from('locations')
         .select('*')
-        .eq('user_id', user.user.id)
+        .eq('user_id', userId)
         .order('times_used', { ascending: false });
 
       if (locationsData) {
@@ -138,7 +137,7 @@ export const useEchoVoice = () => {
       const { data: actionsData } = await supabase
         .from('quick_actions')
         .select('*')
-        .eq('user_id', user.user.id)
+        .eq('user_id', userId)
         .order('button_position');
 
       if (actionsData) setQuickActions(actionsData);
