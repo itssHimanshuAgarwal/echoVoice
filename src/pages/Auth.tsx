@@ -29,7 +29,10 @@ const Auth = () => {
     console.log('Auth page - User:', user, 'Loading:', loading);
     if (user && !loading) {
       console.log('Redirecting to home page...');
-      navigate('/', { replace: true });
+      // Use a small delay to ensure auth state is fully established
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 100);
     }
   }, [user, loading, navigate]);
 
