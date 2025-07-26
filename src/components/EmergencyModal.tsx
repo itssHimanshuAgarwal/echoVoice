@@ -69,13 +69,14 @@ const EmergencyModal = ({ isOpen, onClose, triggerType }: EmergencyModalProps) =
 
   return (
     <AlertDialog open={isOpen} onOpenChange={handleCancel}>
-      <AlertDialogContent className="max-w-md mx-auto">
+      <AlertDialogContent className="max-w-md mx-auto animate-fade-in-up">
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-xl text-destructive">
+          <AlertDialogTitle className="flex items-center gap-2 text-xl text-destructive animate-fade-in-up"
+            style={{ animationDelay: '100ms' }}>
             <AlertTriangle className="h-6 w-6" />
             Emergency Alert
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-3">
+          <AlertDialogDescription className="space-y-3 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
             <div className="text-base">
               Emergency help triggered by {triggerType === "rapid-tap" ? "rapid tapping" : "long press"}.
             </div>
@@ -99,7 +100,8 @@ const EmergencyModal = ({ isOpen, onClose, triggerType }: EmergencyModalProps) =
             </div>
 
             {countdown > 0 && (
-              <div className="bg-warning/10 border border-warning p-3 rounded-lg text-center">
+              <div className="bg-warning/10 border border-warning p-3 rounded-lg text-center animate-soft-pulse"
+                style={{ animationDelay: '300ms' }}>
                 <div className="text-warning font-medium">
                   Auto-sending in {countdown} seconds
                 </div>
@@ -111,7 +113,7 @@ const EmergencyModal = ({ isOpen, onClose, triggerType }: EmergencyModalProps) =
           </AlertDialogDescription>
         </AlertDialogHeader>
         
-        <AlertDialogFooter className="flex-col gap-3 sm:flex-row">
+        <AlertDialogFooter className="flex-col gap-3 sm:flex-row animate-fade-in-up" style={{ animationDelay: '400ms' }}>
           <AlertDialogCancel 
             asChild
             onClick={handleCancel}

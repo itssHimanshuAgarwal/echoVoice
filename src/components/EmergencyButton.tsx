@@ -98,10 +98,11 @@ const EmergencyButton = () => {
           variant="destructive"
           size="lg"
           className={cn(
-            "h-16 w-16 rounded-full shadow-lg transition-all duration-200",
+            "h-16 w-16 rounded-full shadow-lg transition-[var(--transition-gentle)]",
             "hover:scale-110 active:scale-95",
             "focus:ring-4 focus:ring-destructive/50",
-            isLongPress && "animate-pulse bg-warning"
+            !isLongPress && "animate-emergency-pulse",
+            isLongPress && "animate-soft-pulse bg-warning scale-110"
           )}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
@@ -114,16 +115,16 @@ const EmergencyButton = () => {
           <AlertTriangle className="h-8 w-8" />
         </Button>
         
-        {/* Tap indicator */}
+        {/* Tap indicator with gentle animation */}
         {tapCount > 0 && (
-          <div className="absolute -top-2 -right-2 h-6 w-6 bg-warning text-warning-foreground rounded-full flex items-center justify-center text-xs font-bold animate-scale-in">
+          <div className="absolute -top-2 -right-2 h-6 w-6 bg-warning text-warning-foreground rounded-full flex items-center justify-center text-xs font-bold animate-gentle-bounce">
             {tapCount}
           </div>
         )}
         
         {/* Long press progress indicator */}
         {isLongPress && (
-          <div className="absolute inset-0 rounded-full border-4 border-warning animate-spin" />
+          <div className="absolute inset-0 rounded-full border-4 border-warning animate-soft-pulse" />
         )}
       </div>
 

@@ -3,12 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, Volume2, MapPin, Clock, User, Copy, Play } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 const Home = () => {
   const { toast } = useToast();
   const [selectedPhrase, setSelectedPhrase] = useState<string>("");
+  const [animatingCard, setAnimatingCard] = useState<number | null>(null);
+  const [speakingButton, setSpeakingButton] = useState<number | null>(null);
+  const rippleRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   // Mock context data - will be replaced with real data in Phase 2
   const contextData = {
@@ -45,8 +48,16 @@ const Home = () => {
     }
   ];
 
-  const handleSpeakPhrase = async (phrase: string) => {
+  const handleSpeakPhrase = async (phrase: string, cardId?: number) => {
     setSelectedPhrase(phrase);
+    
+    // Trigger card animation
+    if (cardId) {
+      setAnimatingCard(cardId);
+      setSpeakingButton(cardId);
+      setTimeout(() => setAnimatingCard(null), 600);
+      setTimeout(() => setSpeakingButton(null), 1500);
+    }
     
     try {
       // Try text-to-speech first
@@ -76,6 +87,32 @@ const Home = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const createRipple = (event: React.MouseEvent, cardId: number) => {
+    const card = event.currentTarget as HTMLElement;
+    const rect = card.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+    
+    const ripple = document.createElement('span');
+    ripple.style.cssText = `
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.3);
+      transform: scale(0);
+      animation: ripple 0.6s ease-out;
+      left: ${x}px;
+      top: ${y}px;
+      width: ${size}px;
+      height: ${size}px;
+      pointer-events: none;
+      z-index: 10;
+    `;
+    
+    card.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -140,11 +177,15 @@ const Home = () => {
             <Card 
               key={suggestion.id} 
               className={cn(
-                "cursor-pointer transition-[var(--transition-gentle)] border-l-4",
+                "cursor-pointer transition-[var(--transition-gentle)] border-l-4 relative overflow-hidden",
                 "hover:scale-[1.01] hover:shadow-[var(--shadow-gentle)]",
-                selectedPhrase === suggestion.text ? 'ring-2 ring-primary border-l-primary' : 'border-l-accent/30 hover:border-l-accent'
+                selectedPhrase === suggestion.text ? 'ring-2 ring-primary border-l-primary' : 'border-l-accent/30 hover:border-l-accent',
+                animatingCard === suggestion.id && 'animate-gentle-bounce'
               )}
-              onClick={() => handleSpeakPhrase(suggestion.text)}
+              onClick={(e) => {
+                createRipple(e, suggestion.id);
+                handleSpeakPhrase(suggestion.text, suggestion.id);
+              }}
             >
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-4">
@@ -165,10 +206,13 @@ const Home = () => {
                     <Button 
                       size="lg" 
                       variant="warm"
-                      className="h-12 w-12 p-0 rounded-xl"
+                      className={cn(
+                        "h-12 w-12 p-0 rounded-xl relative overflow-hidden",
+                        speakingButton === suggestion.id && 'animate-speak-ready'
+                      )}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleSpeakPhrase(suggestion.text);
+                        handleSpeakPhrase(suggestion.text, suggestion.id);
                       }}
                     >
                       <Volume2 className="h-5 w-5" />
@@ -222,13 +266,16 @@ const Home = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-            {["Yes", "No", "Thank you", "Help", "Water", "Tired"].map((phrase) => (
+            {["Yes", "No", "Thank you", "Help", "Water", "Tired"].map((phrase, index) => (
               <Button
                 key={phrase}
                 variant="outline"
                 size="xl"
-                className="h-16 text-base font-medium"
-                onClick={() => handleSpeakPhrase(phrase)}
+                className="h-16 text-base font-medium relative overflow-hidden group"
+                onClick={(e) => {
+                  createRipple(e, index + 100); // Use offset ID for quick phrases
+                  handleSpeakPhrase(phrase);
+                }}
               >
                 <Volume2 className="h-4 w-4 mr-2 text-primary" />
                 {phrase}

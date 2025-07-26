@@ -97,17 +97,49 @@ export default {
 						height: '0'
 					}
 				},
-				'scale-in': {
-					'0%': {
-						transform: 'scale(0.95)',
-						opacity: '0'
+				'gentle-bounce': {
+					'0%, 100%': {
+						transform: 'translateY(0) scale(1)',
+						animationTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
 					},
-					'100%': {
-						transform: 'scale(1)',
-						opacity: '1'
+					'50%': {
+						transform: 'translateY(-2px) scale(1.01)',
+						animationTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
 					}
 				},
-				'fade-in': {
+				'soft-pulse': {
+					'0%, 100%': {
+						opacity: '1',
+						transform: 'scale(1)'
+					},
+					'50%': {
+						opacity: '0.8',
+						transform: 'scale(1.02)'
+					}
+				},
+				'emergency-pulse': {
+					'0%, 100%': {
+						opacity: '0.9',
+						transform: 'scale(1)',
+						boxShadow: '0 0 0 0 rgba(239, 68, 68, 0.4)'
+					},
+					'50%': {
+						opacity: '1',
+						transform: 'scale(1.05)',
+						boxShadow: '0 0 0 8px rgba(239, 68, 68, 0.1)'
+					}
+				},
+				'ripple': {
+					'0%': {
+						transform: 'scale(0)',
+						opacity: '0.6'
+					},
+					'100%': {
+						transform: 'scale(4)',
+						opacity: '0'
+					}
+				},
+				'fade-in-up': {
 					'0%': {
 						opacity: '0',
 						transform: 'translateY(10px)'
@@ -116,13 +148,27 @@ export default {
 						opacity: '1',
 						transform: 'translateY(0)'
 					}
+				},
+				'speak-ready': {
+					'0%, 100%': {
+						backgroundColor: 'hsl(var(--accent))',
+						transform: 'scale(1)'
+					},
+					'50%': {
+						backgroundColor: 'hsl(var(--accent) / 0.9)',
+						transform: 'scale(1.08)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'scale-in': 'scale-in 0.2s ease-out',
-				'fade-in': 'fade-in 0.3s ease-out'
+				'gentle-bounce': 'gentle-bounce 0.6s ease-in-out',
+				'soft-pulse': 'soft-pulse 2s ease-in-out infinite',
+				'emergency-pulse': 'emergency-pulse 2.5s ease-in-out infinite',
+				'ripple': 'ripple 0.6s ease-out',
+				'fade-in-up': 'fade-in-up 0.3s ease-out',
+				'speak-ready': 'speak-ready 1.5s ease-in-out infinite'
 			}
 		}
 	},
