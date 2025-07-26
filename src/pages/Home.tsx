@@ -147,6 +147,27 @@ const Home = () => {
     }
   };
 
+  // Temporary: Show debug info if no user
+  if (!user) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold font-display mb-4">Authentication Debug</h1>
+          <p className="text-muted-foreground mb-4">User not authenticated in this preview session</p>
+          <div className="bg-card p-4 rounded-lg border">
+            <p className="text-sm">Your data exists in the database:</p>
+            <ul className="text-sm text-left mt-2">
+              <li>• Multiple "Lily" contacts saved</li>
+              <li>• Locations: Brook Avenue, Home, Park</li>
+              <li>• User ID: 4517699f-1e28-4159-a8ec-0735cd152aa5</li>
+            </ul>
+            <p className="text-sm mt-4">Try the published site: https://speak-assist-now.lovable.app/</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
       {/* Header with Settings Button and Sign Out */}
