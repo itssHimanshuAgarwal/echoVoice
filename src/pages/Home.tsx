@@ -22,6 +22,7 @@ const Home = () => {
   const [speakingButton, setSpeakingButton] = useState<number | null>(null);
   const rippleRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   
+  const { user } = useAuth();
   const {
     isLoading,
     isSpeaking,
@@ -48,8 +49,11 @@ const Home = () => {
   };
 
   useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
+    // Only load data when user is authenticated
+    if (user) {
+      loadInitialData();
+    }
+  }, [loadInitialData, user]);
 
   useEffect(() => {
     // Generate suggestions when context changes
