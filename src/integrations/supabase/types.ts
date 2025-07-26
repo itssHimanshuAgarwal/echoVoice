@@ -14,7 +14,159 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      communication_history: {
+        Row: {
+          context_location: string | null
+          context_person: string | null
+          context_time: string | null
+          created_at: string
+          id: string
+          phrase: string
+          phrase_type: string | null
+          priority_level: string | null
+          times_used: number | null
+          user_id: string
+        }
+        Insert: {
+          context_location?: string | null
+          context_person?: string | null
+          context_time?: string | null
+          created_at?: string
+          id?: string
+          phrase: string
+          phrase_type?: string | null
+          priority_level?: string | null
+          times_used?: number | null
+          user_id: string
+        }
+        Update: {
+          context_location?: string | null
+          context_person?: string | null
+          context_time?: string | null
+          created_at?: string
+          id?: string
+          phrase?: string
+          phrase_type?: string | null
+          priority_level?: string | null
+          times_used?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      emergency_contacts: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          is_primary: boolean | null
+          name: string
+          phone: string | null
+          relationship: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name: string
+          phone?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name?: string
+          phone?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      favorite_phrases: {
+        Row: {
+          category: string | null
+          created_at: string
+          custom_created: boolean | null
+          id: string
+          phrase: string
+          times_used: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          custom_created?: boolean | null
+          id?: string
+          phrase: string
+          times_used?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          custom_created?: boolean | null
+          id?: string
+          phrase?: string
+          times_used?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          accessibility_large_text: boolean | null
+          accessibility_reduced_motion: boolean | null
+          communication_style: string | null
+          context_detection: boolean | null
+          created_at: string
+          elevenlabs_voice_id: string | null
+          id: string
+          save_history: boolean | null
+          speech_speed: number | null
+          updated_at: string
+          user_id: string
+          voice_type: string | null
+        }
+        Insert: {
+          accessibility_large_text?: boolean | null
+          accessibility_reduced_motion?: boolean | null
+          communication_style?: string | null
+          context_detection?: boolean | null
+          created_at?: string
+          elevenlabs_voice_id?: string | null
+          id?: string
+          save_history?: boolean | null
+          speech_speed?: number | null
+          updated_at?: string
+          user_id: string
+          voice_type?: string | null
+        }
+        Update: {
+          accessibility_large_text?: boolean | null
+          accessibility_reduced_motion?: boolean | null
+          communication_style?: string | null
+          context_detection?: boolean | null
+          created_at?: string
+          elevenlabs_voice_id?: string | null
+          id?: string
+          save_history?: boolean | null
+          speech_speed?: number | null
+          updated_at?: string
+          user_id?: string
+          voice_type?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
