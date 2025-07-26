@@ -2,109 +2,126 @@
 @tailwind components;
 @tailwind utilities;
 
-/* EchoVoice - Accessible Communication App Design System
-All colors MUST be HSL. Optimized for high contrast and accessibility.
+/* EchoVoice - Empathetic Communication App Design System
+Calm, human-centered design inspired by Apple Accessibility and Notion
+All colors MUST be HSL. Optimized for emotional comfort and accessibility.
 */
 
 @layer base {
   :root {
-    /* High contrast background system */
-    --background: 0 0% 98%;
-    --foreground: 220 15% 15%;
+    /* Soft, calming background system - pale blue and off-white */
+    --background: 210 25% 98%;
+    --foreground: 215 25% 16%;
 
-    /* Card system with strong contrast */
+    /* Card system with gentle separation */
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
+    --card-foreground: 215 25% 16%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
+    --popover-foreground: 215 25% 16%;
 
-    /* Primary: Deep blue for excellent contrast */
-    --primary: 220 85% 25%;
+    /* Primary: Gentle, trustworthy blue */
+    --primary: 214 84% 56%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Soft gray with high contrast */
-    --secondary: 220 10% 85%;
-    --secondary-foreground: 220 15% 15%;
+    /* Secondary: Soft, warm gray */
+    --secondary: 210 15% 90%;
+    --secondary-foreground: 215 25% 16%;
 
-    /* Muted: Light backgrounds */
-    --muted: 220 10% 92%;
-    --muted-foreground: 220 15% 40%;
+    /* Muted: Very light, comfortable backgrounds */
+    --muted: 210 20% 95%;
+    --muted-foreground: 215 15% 45%;
 
-    /* Accent: Complementary blue-green */
-    --accent: 180 50% 30%;
+    /* Accent: Warm, comforting teal */
+    --accent: 175 60% 50%;
     --accent-foreground: 0 0% 100%;
 
-    /* Success and warning for communication feedback */
-    --success: 120 60% 35%;
+    /* Success: Gentle, encouraging green */
+    --success: 150 50% 45%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 40 85% 50%;
-    --warning-foreground: 220 15% 15%;
+    /* Warning: Soft, attention-drawing amber */
+    --warning: 42 95% 65%;
+    --warning-foreground: 215 25% 16%;
 
-    --destructive: 0 75% 45%;
+    --destructive: 358 75% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Accessible borders and inputs */
-    --border: 220 15% 80%;
-    --input: 220 15% 85%;
-    --ring: 220 85% 40%;
+    /* Subtle, accessible borders */
+    --border: 215 20% 85%;
+    --input: 215 20% 92%;
+    --ring: 214 84% 56%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Sidebar system */
+    --sidebar-background: 210 20% 97%;
+    --sidebar-foreground: 215 20% 25%;
+    --sidebar-primary: 214 84% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 15% 90%;
+    --sidebar-accent-foreground: 215 25% 16%;
+    --sidebar-border: 215 20% 88%;
+    --sidebar-ring: 214 84% 56%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Enhanced spacing and comfort */
+    --content-padding: 1.5rem;
+    --section-spacing: 2rem;
+    --card-padding: 1.25rem;
+    
+    /* Soft shadows for depth */
+    --shadow-soft: 0 2px 8px rgba(59, 130, 246, 0.08);
+    --shadow-gentle: 0 4px 16px rgba(59, 130, 246, 0.12);
+    --shadow-warm: 0 8px 32px rgba(59, 130, 246, 0.15);
 
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Smooth transitions */
+    --transition-gentle: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 215 30% 8%;
+    --foreground: 210 40% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 215 30% 10%;
+    --card-foreground: 210 40% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 215 30% 10%;
+    --popover-foreground: 210 40% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 214 84% 65%;
+    --primary-foreground: 215 30% 8%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 215 25% 15%;
+    --secondary-foreground: 210 40% 95%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 215 25% 12%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 175 60% 55%;
+    --accent-foreground: 215 30% 8%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --success: 150 50% 50%;
+    --success-foreground: 215 30% 8%;
+    
+    --warning: 42 95% 70%;
+    --warning-foreground: 215 30% 8%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --destructive: 358 75% 65%;
+    --destructive-foreground: 215 30% 8%;
+
+    --border: 215 25% 18%;
+    --input: 215 25% 15%;
+    --ring: 214 84% 65%;
+    
+    --sidebar-background: 215 30% 9%;
+    --sidebar-foreground: 210 40% 90%;
+    --sidebar-primary: 214 84% 65%;
+    --sidebar-primary-foreground: 215 30% 8%;
+    --sidebar-accent: 215 25% 15%;
+    --sidebar-accent-foreground: 210 40% 95%;
+    --sidebar-border: 215 25% 18%;
+    --sidebar-ring: 214 84% 65%;
   }
 }
 
@@ -115,5 +132,45 @@ All colors MUST be HSL. Optimized for high contrast and accessibility.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    font-variation-settings: 'opsz' 32;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fraunces', 'Inter', serif;
+    font-feature-settings: 'ss01', 'ss02';
+  }
+}
+
+@layer components {
+  .empathetic-card {
+    @apply bg-card border border-border rounded-xl shadow-[var(--shadow-soft)] 
+           hover:shadow-[var(--shadow-gentle)] transition-[var(--transition-gentle)];
+  }
+
+  .gentle-button {
+    @apply transition-[var(--transition-gentle)] 
+           hover:scale-[1.02] active:scale-[0.98]
+           focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  .warm-interaction {
+    @apply hover:bg-accent/10 transition-[var(--transition-gentle)]
+           rounded-lg cursor-pointer;
+  }
+
+  .soft-separator {
+    @apply border-border/40;
+  }
+
+  .context-section {
+    @apply bg-muted/40 border border-border/30 rounded-xl 
+           p-[var(--card-padding)] space-y-3;
+  }
+
+  .phrase-card {
+    @apply empathetic-card warm-interaction p-[var(--card-padding)]
+           border-l-4 border-l-accent/20 hover:border-l-accent/60;
   }
 }

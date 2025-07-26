@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, Volume2, MapPin, Clock, User, Copy, Play } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 const Home = () => {
   const { toast } = useToast();
@@ -87,30 +88,36 @@ const Home = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
       {/* Context Information Panel */}
-      <Card className="bg-muted/30">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg">Current Context</CardTitle>
+      <Card className="context-section">
+        <CardHeader className="pb-5">
+          <CardTitle className="text-lg font-display">Current Context</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
-              <Clock className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border/30 shadow-[var(--shadow-soft)]">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
               <div>
                 <div className="text-sm text-muted-foreground">Time</div>
                 <div className="font-medium">{contextData.time}</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
-              <MapPin className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border/30 shadow-[var(--shadow-soft)]">
+              <div className="p-2 bg-accent/10 rounded-lg">
+                <MapPin className="h-5 w-5 text-accent" />
+              </div>
               <div>
                 <div className="text-sm text-muted-foreground">Location</div>
                 <div className="font-medium">{contextData.location}</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
-              <User className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border/30 shadow-[var(--shadow-soft)]">
+              <div className="p-2 bg-success/10 rounded-lg">
+                <User className="h-5 w-5 text-success" />
+              </div>
               <div>
                 <div className="text-sm text-muted-foreground">Detected</div>
                 <div className="font-medium">{contextData.detectedPerson}</div>
@@ -121,70 +128,71 @@ const Home = () => {
       </Card>
 
       {/* AI Phrase Suggestions */}
-      <Card>
+      <Card className="phrase-card">
         <CardHeader>
-          <CardTitle className="text-lg">Suggested Phrases</CardTitle>
+          <CardTitle className="text-lg font-display">Suggested Phrases</CardTitle>
           <CardDescription>
             AI-powered suggestions based on your context
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            {suggestedPhrases.map((suggestion) => (
-              <Card 
-                key={suggestion.id} 
-                className={`cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md ${
-                  selectedPhrase === suggestion.text ? 'ring-2 ring-primary' : ''
-                }`}
-                onClick={() => handleSpeakPhrase(suggestion.text)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className={getPriorityColor(suggestion.priority)}>
+        <CardContent className="space-y-4">
+          {suggestedPhrases.map((suggestion) => (
+            <Card 
+              key={suggestion.id} 
+              className={cn(
+                "cursor-pointer transition-[var(--transition-gentle)] border-l-4",
+                "hover:scale-[1.01] hover:shadow-[var(--shadow-gentle)]",
+                selectedPhrase === suggestion.text ? 'ring-2 ring-primary border-l-primary' : 'border-l-accent/30 hover:border-l-accent'
+              )}
+              onClick={() => handleSpeakPhrase(suggestion.text)}
+            >
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge className={cn("text-xs font-medium", getPriorityColor(suggestion.priority))}>
                           {suggestion.priority} priority
                         </Badge>
                       </div>
-                      <div className="text-lg font-medium mb-1 leading-relaxed">
+                      <div className="text-lg font-medium mb-2 leading-relaxed font-display">
                         {suggestion.text}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {suggestion.context}
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Button 
-                        size="sm" 
-                        className="h-12 w-12 p-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSpeakPhrase(suggestion.text);
-                        }}
-                      >
-                        <Volume2 className="h-5 w-5" />
-                      </Button>
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      size="lg" 
+                      variant="warm"
+                      className="h-12 w-12 p-0 rounded-xl"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSpeakPhrase(suggestion.text);
+                      }}
+                    >
+                      <Volume2 className="h-5 w-5" />
+                    </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+          ))}
         </CardContent>
       </Card>
 
       {/* Selected Phrase Display */}
       {selectedPhrase && (
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="p-4">
+        <Card className="bg-primary/5 border-primary/20 shadow-[var(--shadow-gentle)]">
+          <CardContent className="p-5">
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <div className="text-sm text-muted-foreground mb-1">Selected phrase:</div>
-                <div className="text-lg font-medium">{selectedPhrase}</div>
+                <div className="text-sm text-muted-foreground mb-2 font-medium">Selected phrase:</div>
+                <div className="text-lg font-medium font-display">{selectedPhrase}</div>
               </div>
               <div className="flex gap-2">
                 <Button 
-                  variant="outline" 
+                variant="outline"
                   size="sm"
                   onClick={() => navigator.clipboard.writeText(selectedPhrase)}
                 >
@@ -207,19 +215,19 @@ const Home = () => {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
+          <CardTitle className="text-lg font-display">Quick Actions</CardTitle>
           <CardDescription>
             Common phrases and custom input
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
             {["Yes", "No", "Thank you", "Help", "Water", "Tired"].map((phrase) => (
               <Button
                 key={phrase}
                 variant="outline"
-                size="lg"
-                className="h-16 text-base"
+                size="xl"
+                className="h-16 text-base font-medium"
                 onClick={() => handleSpeakPhrase(phrase)}
               >
                 <Volume2 className="h-4 w-4 mr-2 text-primary" />
@@ -229,11 +237,11 @@ const Home = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button size="lg" className="flex-1 h-16" variant="secondary">
+            <Button size="xl" className="flex-1 h-16" variant="gentle">
               <Mic className="h-5 w-5 mr-3" />
               Record Custom Message
             </Button>
-            <Button variant="outline" size="lg" className="flex-1 h-16">
+            <Button variant="outline" size="xl" className="flex-1 h-16">
               Type Custom Message
             </Button>
           </div>
