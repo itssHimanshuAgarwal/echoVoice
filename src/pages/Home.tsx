@@ -16,26 +16,11 @@ import { Loader2 } from "lucide-react";
 const Home = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, loading, signOut } = useAuth();
+  const { signOut } = useAuth();
   const [selectedPhrase, setSelectedPhrase] = useState<string>("");
   const [animatingCard, setAnimatingCard] = useState<number | null>(null);
   const [speakingButton, setSpeakingButton] = useState<number | null>(null);
   const rippleRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
-
-  // Redirect to auth if not authenticated
-  if (!loading && !user) {
-    navigate('/auth');
-    return null;
-  }
-
-  // Show loading spinner while checking auth
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
   
   const {
     isLoading,
