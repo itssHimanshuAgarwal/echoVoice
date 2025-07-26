@@ -237,7 +237,8 @@ export const useEchoVoice = () => {
       const now = new Date();
       const timeOfDay = now.getHours() < 12 ? 'morning' : now.getHours() < 17 ? 'afternoon' : 'evening';
 
-      const { error } = await supabase
+      // Save to phrase_analytics for detailed analytics
+      const { error: analyticsError } = await supabase
         .from('phrase_analytics')
         .insert({
           user_id: user.user.id,
@@ -249,7 +250,22 @@ export const useEchoVoice = () => {
           context_tags: [phraseType],
         });
 
-      if (error) throw error;
+      if (analyticsError) throw analyticsError;
+
+      // Save to communication_history for history display
+      const { error: historyError } = await supabase
+        .from('communication_history')
+        .insert({
+          user_id: user.user.id,
+          phrase: phrase,
+          phrase_type: phraseType,
+          context_location: currentLocation?.name,
+          context_person: currentPerson?.name,
+          context_time: timeOfDay,
+          times_used: 1,
+        });
+
+      if (historyError) throw historyError;
 
       // Update usage counts
       if (currentPerson) {

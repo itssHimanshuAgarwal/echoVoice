@@ -2,17 +2,31 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Volume2, Clock, Trash2, Heart, ArrowLeft, MapPin, User, MoreVertical, Calendar, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+
+interface HistoryItem {
+  id: string;
+  phrase: string;
+  created_at: string;
+  context_location: string | null;
+  context_person: string | null;
+  context_time: string | null;
+  phrase_type: string;
+  times_used: number;
+}
 
 const History = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set([2, 4])); // Mock favorites
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
   // Redirect to auth if not authenticated
   if (!loading && !user) {
@@ -20,8 +34,8 @@ const History = () => {
     return null;
   }
 
-  // Show loading spinner while checking auth
-  if (loading) {
+  // Show loading spinner while checking auth or loading history
+  if (loading || isLoadingHistory) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -29,69 +43,34 @@ const History = () => {
     );
   }
 
-  // Enhanced mock history data with full context
-  const historyItems = [
-    { 
-      id: 1, 
-      phrase: "I need help with my medication", 
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      context: {
-        location: "Bedroom",
-        detectedPerson: "Sarah (Caregiver)",
-        timeOfDay: "Morning"
-      },
-      frequency: 3,
-      category: "medical"
-    },
-    { 
-      id: 2, 
-      phrase: "Thank you for helping me", 
-      timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
-      context: {
-        location: "Living Room",
-        detectedPerson: "Sarah (Caregiver)",
-        timeOfDay: "Morning"
-      },
-      frequency: 15,
-      category: "social"
-    },
-    { 
-      id: 3, 
-      phrase: "I'm feeling tired and need to rest", 
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
-      context: {
-        location: "Living Room",
-        detectedPerson: "John (Family)",
-        timeOfDay: "Afternoon"
-      },
-      frequency: 2,
-      category: "personal"
-    },
-    { 
-      id: 4, 
-      phrase: "Water please", 
-      timestamp: new Date(Date.now() - 25 * 60 * 60 * 1000), // Yesterday
-      context: {
-        location: "Kitchen",
-        detectedPerson: "John (Family)",
-        timeOfDay: "Afternoon"
-      },
-      frequency: 8,
-      category: "request"
-    },
-    { 
-      id: 5, 
-      phrase: "Good morning", 
-      timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000), // 2 days ago
-      context: {
-        location: "Bedroom",
-        detectedPerson: "Sarah (Caregiver)",
-        timeOfDay: "Morning"
-      },
-      frequency: 12,
-      category: "greeting"
-    }
-  ];
+  // Load real history data from Supabase
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('communication_history')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setHistoryItems(data || []);
+      } catch (error) {
+        console.error('Error loading history:', error);
+        toast({
+          title: "Error loading history",
+          description: "Could not load communication history",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadHistory();
+  }, [user, toast]);
 
   const handleSpeakPhrase = (phrase: string) => {
     try {
@@ -119,40 +98,66 @@ const History = () => {
     }
   };
 
-  const toggleFavorite = (id: number) => {
-    setFavoriteIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-        toast({
-          title: "Removed from favorites",
-          description: "Phrase unfavorited",
+  const toggleFavorite = async (id: string) => {
+    try {
+      const item = historyItems.find(item => item.id === id);
+      if (!item) return;
+
+      const { error } = await supabase
+        .from('favorite_phrases')
+        .upsert({
+          user_id: user!.id,
+          phrase: item.phrase,
+          category: item.phrase_type,
+          times_used: item.times_used,
         });
-      } else {
-        newSet.add(id);
-        toast({
-          title: "Added to favorites",
-          description: "Phrase saved for quick access",
-        });
-      }
-      return newSet;
-    });
+
+      if (error) throw error;
+
+      setFavoriteIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(id)) {
+          newSet.delete(id);
+          toast({
+            title: "Removed from favorites",
+            description: "Phrase unfavorited",
+          });
+        } else {
+          newSet.add(id);
+          toast({
+            title: "Added to favorites",
+            description: "Phrase saved for quick access",
+          });
+        }
+        return newSet;
+      });
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      toast({
+        title: "Error",
+        description: "Could not update favorite",
+        variant: "destructive",
+      });
+    }
   };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "medical": return "bg-destructive/10 text-destructive border-destructive/20";
-      case "social": return "bg-success/10 text-success border-success/20";
+      case "social": return "bg-success/10 text-success border-success/20"; 
       case "personal": return "bg-accent/10 text-accent border-accent/20";
       case "request": return "bg-warning/10 text-warning border-warning/20";
       case "greeting": return "bg-primary/10 text-primary border-primary/20";
+      case "custom": return "bg-secondary/10 text-secondary border-secondary/20";
+      case "suggestion": return "bg-primary/10 text-primary border-primary/20";
       default: return "bg-muted text-muted-foreground";
     }
   };
 
-  const formatRelativeTime = (timestamp: Date) => {
+  const formatRelativeTime = (timestamp: string) => {
     const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
+    const date = new Date(timestamp);
+    const diff = now.getTime() - date.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
 
@@ -162,11 +167,11 @@ const History = () => {
     return `${days} days ago`;
   };
 
-  const groupByDate = (items: typeof historyItems) => {
-    const groups: { [key: string]: typeof historyItems } = {};
+  const groupByDate = (items: HistoryItem[]) => {
+    const groups: { [key: string]: HistoryItem[] } = {};
     
     items.forEach(item => {
-      const date = item.timestamp.toDateString();
+      const date = new Date(item.created_at).toDateString();
       if (!groups[date]) groups[date] = [];
       groups[date].push(item);
     });
@@ -251,11 +256,11 @@ const History = () => {
                               </div>
                               
                               <div className="flex items-center gap-2 flex-wrap">
-                                <Badge className={getCategoryColor(item.category)}>
-                                  {item.category}
+                                <Badge className={getCategoryColor(item.phrase_type)}>
+                                  {item.phrase_type}
                                 </Badge>
                                 <Badge variant="outline">
-                                  Used {item.frequency} times
+                                  Used {item.times_used} times
                                 </Badge>
                               </div>
                             </div>
@@ -286,15 +291,15 @@ const History = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                               <div className="flex items-center gap-2">
                                 <Clock className="h-3 w-3 text-muted-foreground" />
-                                <span>{formatRelativeTime(item.timestamp)}</span>
+                                <span>{formatRelativeTime(item.created_at)}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <MapPin className="h-3 w-3 text-muted-foreground" />
-                                <span>{item.context.location}</span>
+                                <span>{item.context_location || 'Unknown location'}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <User className="h-3 w-3 text-muted-foreground" />
-                                <span>{item.context.detectedPerson}</span>
+                                <span>{item.context_person || 'No person specified'}</span>
                               </div>
                             </div>
                           </div>
