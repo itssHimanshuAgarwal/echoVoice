@@ -6,66 +6,87 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Simple phrase suggestions based on context (free alternative to GPT)
-function generateContextualPhrases(context: any) {
-  const { timeOfDay, location, person, style, recentHistory } = context;
+async function generateAIPhrases(context: any) {
+  const { timeOfDay, location, person, style } = context;
+  const apiKey = Deno.env.get('GOOGLE_AI_API_KEY');
   
-  const suggestions = [];
-  
-  // Time-based suggestions
-  const hour = new Date().getHours();
-  if (hour < 12) {
-    suggestions.push({ phrase: "Good morning", priority: "medium", category: "greeting" });
-    suggestions.push({ phrase: "I need help getting ready", priority: "high", category: "assistance" });
-  } else if (hour < 17) {
-    suggestions.push({ phrase: "Good afternoon", priority: "medium", category: "greeting" });
-    suggestions.push({ phrase: "I would like lunch", priority: "high", category: "needs" });
-  } else {
-    suggestions.push({ phrase: "Good evening", priority: "medium", category: "greeting" });
-    suggestions.push({ phrase: "I'm ready for dinner", priority: "high", category: "needs" });
+  if (!apiKey) {
+    console.error('Google AI API key not found');
+    return [];
   }
+
+  const currentHour = new Date().getHours();
+  const timeContext = currentHour < 12 ? 'morning' : currentHour < 17 ? 'afternoon' : 'evening';
   
-  // Person-based suggestions
-  if (person) {
-    suggestions.push({ phrase: `Hello ${person}`, priority: "high", category: "greeting" });
-    suggestions.push({ phrase: "Thank you for helping me", priority: "medium", category: "gratitude" });
-    suggestions.push({ phrase: "Can you help me please?", priority: "high", category: "assistance" });
+  const prompt = `You are an AI assistant helping someone with communication challenges. Generate 4 practical, empathetic phrase suggestions based on this context:
+
+Time: ${timeContext}
+Location: ${location || 'not specified'}
+Person present: ${person || 'no one specific'}
+Communication style: ${style || 'casual'}
+
+Requirements:
+- Keep phrases short and clear (max 10 words)
+- Make them practical for someone who needs communication assistance
+- Include appropriate greetings, needs, or requests
+- Vary the priority levels (high, medium)
+- Categorize as: greeting, needs, assistance, gratitude, or social
+
+Return ONLY a JSON array with this exact format:
+[
+  {"phrase": "Good ${timeContext}", "priority": "medium", "category": "greeting"},
+  {"phrase": "Can you help me please?", "priority": "high", "category": "assistance"},
+  {"phrase": "I need assistance", "priority": "high", "category": "needs"},
+  {"phrase": "Thank you", "priority": "medium", "category": "gratitude"}
+]`;
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 500,
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Google AI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!generatedText) {
+      throw new Error('No content generated');
+    }
+
+    // Parse the JSON response
+    const cleanText = generatedText.replace(/```json\n?|\n?```/g, '').trim();
+    const suggestions = JSON.parse(cleanText);
+    
+    console.log('Generated AI suggestions:', suggestions);
+    return suggestions;
+    
+  } catch (error) {
+    console.error('Error calling Google AI:', error);
+    // Fallback to basic suggestions if AI fails
+    return [
+      { phrase: "I need help", priority: "high", category: "assistance" },
+      { phrase: "Thank you", priority: "medium", category: "gratitude" },
+      { phrase: `Good ${timeContext}`, priority: "medium", category: "greeting" },
+      { phrase: "Can you assist me?", priority: "high", category: "assistance" }
+    ];
   }
-  
-  // Location-based suggestions
-  switch (location?.toLowerCase()) {
-    case 'kitchen':
-      suggestions.push({ phrase: "I need something to drink", priority: "high", category: "needs" });
-      suggestions.push({ phrase: "I'm hungry", priority: "high", category: "needs" });
-      break;
-    case 'bedroom':
-      suggestions.push({ phrase: "I need help getting dressed", priority: "high", category: "assistance" });
-      suggestions.push({ phrase: "I want to rest", priority: "medium", category: "needs" });
-      break;
-    case 'bathroom':
-      suggestions.push({ phrase: "I need assistance", priority: "high", category: "assistance" });
-      suggestions.push({ phrase: "Please wait outside", priority: "medium", category: "privacy" });
-      break;
-    default:
-      suggestions.push({ phrase: "I need help", priority: "high", category: "assistance" });
-  }
-  
-  // Style adjustments
-  if (style === 'formal') {
-    return suggestions.map(s => ({
-      ...s,
-      phrase: s.phrase.replace("I need", "I would appreciate assistance with")
-        .replace("Can you help", "Could you please assist")
-    }));
-  } else if (style === 'casual') {
-    return suggestions.map(s => ({
-      ...s,
-      phrase: s.phrase.replace("I would like", "I want")
-        .replace("Could you please", "Can you")
-    }));
-  }
-  
-  return suggestions.slice(0, 4); // Return top 4 suggestions
 }
 
 serve(async (req) => {
@@ -76,7 +97,7 @@ serve(async (req) => {
   try {
     const { context } = await req.json();
     
-    const suggestions = generateContextualPhrases(context);
+    const suggestions = await generateAIPhrases(context);
     
     return new Response(JSON.stringify({ suggestions }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
