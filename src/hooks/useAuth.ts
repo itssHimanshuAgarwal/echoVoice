@@ -21,16 +21,38 @@ export const useAuth = (): AuthContextType => {
 
   useEffect(() => {
     let mounted = true;
+    
+    // Get initial session immediately
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (!mounted) return;
+        
+        console.log('Initial session check:', session?.user?.id, error);
+        if (session) {
+          setSession(session);
+          setUser(session.user);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error('Error getting session:', error);
+        if (mounted) setLoading(false);
+      }
+    };
 
-    // Set up auth state listener FIRST
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (!mounted) return;
         
         console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+        
+        // Only set loading to false after we've processed the auth change
+        if (event !== 'INITIAL_SESSION') {
+          setLoading(false);
+        }
         
         if (event === 'SIGNED_IN') {
           toast({
@@ -39,28 +61,14 @@ export const useAuth = (): AuthContextType => {
           });
         } else if (event === 'SIGNED_OUT') {
           toast({
-            title: "Signed out",
+            title: "Signed out", 
             description: "You've been signed out successfully.",
           });
         }
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (!mounted) return;
-      
-      console.log('Initial session check:', session?.user?.id, error);
-      if (error) {
-        console.error('Session error:', error);
-        setLoading(false);
-        return;
-      }
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    getInitialSession();
 
     return () => {
       mounted = false;
