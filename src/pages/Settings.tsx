@@ -7,10 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Volume2, Mic, Accessibility, Bell, Shield, ArrowLeft, Eye, MapPin, Clock, Type, Palette, Zap } from "lucide-react";
+import { Volume2, Mic, Accessibility, Bell, Shield, ArrowLeft, Eye, MapPin, Clock, Type, Palette, Zap, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   
   // State for all settings (Phase 1 - UI only, no persistence)
   const [settings, setSettings] = useState({
@@ -38,6 +40,21 @@ const Settings = () => {
     notifications: true,
     emergencyContacts: true
   });
+  
+  // Redirect to auth if not authenticated
+  if (!loading && !user) {
+    navigate('/auth');
+    return null;
+  }
+
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   const updateSetting = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));

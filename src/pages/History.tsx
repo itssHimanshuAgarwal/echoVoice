@@ -3,14 +3,31 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Volume2, Clock, Trash2, Heart, ArrowLeft, MapPin, User, MoreVertical, Calendar } from "lucide-react";
+import { Volume2, Clock, Trash2, Heart, ArrowLeft, MapPin, User, MoreVertical, Calendar, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const History = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set([2, 4])); // Mock favorites
+
+  // Redirect to auth if not authenticated
+  if (!loading && !user) {
+    navigate('/auth');
+    return null;
+  }
+
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   // Enhanced mock history data with full context
   const historyItems = [

@@ -10,14 +10,32 @@ import { PersonSelector } from "@/components/PersonSelector";
 import { LocationSelector } from "@/components/LocationSelector";
 import { CustomMessageInput } from "@/components/CustomMessageInput";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading, signOut } = useAuth();
   const [selectedPhrase, setSelectedPhrase] = useState<string>("");
   const [animatingCard, setAnimatingCard] = useState<number | null>(null);
   const [speakingButton, setSpeakingButton] = useState<number | null>(null);
   const rippleRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+
+  // Redirect to auth if not authenticated
+  if (!loading && !user) {
+    navigate('/auth');
+    return null;
+  }
+
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
   
   const {
     isLoading,
@@ -133,16 +151,21 @@ const Home = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
-      {/* Header with Settings Button */}
+      {/* Header with Settings Button and Sign Out */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold font-display">EchoVoice</h1>
           <p className="text-muted-foreground">Your intelligent communication assistant</p>
         </div>
-        <Button variant="outline" onClick={() => navigate('/settings')}>
-          <Settings className="h-4 w-4 mr-2" />
-          Settings
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/settings')}>
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
+          <Button variant="outline" onClick={signOut}>
+            Sign Out
+          </Button>
+        </div>
       </div>
 
       {/* Dynamic Context Panels */}
