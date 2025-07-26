@@ -153,12 +153,26 @@ export const useEchoVoice = () => {
     
     setIsLoading(true);
     try {
+      console.log('Generating suggestions with context:', context);
+      
       const { data, error } = await supabase.functions.invoke('generate-phrase-suggestions', {
         body: { context: { ...context, style: settings.communication_style } }
       });
 
+      console.log('Suggestion response:', { data, error });
+
       if (error) throw error;
-      setSuggestions(data.suggestions || []);
+      
+      const suggestions = data?.suggestions || [];
+      console.log('Setting suggestions:', suggestions);
+      setSuggestions(suggestions);
+      
+      if (suggestions.length === 0) {
+        toast({
+          title: "No Suggestions",
+          description: "No suggestions generated for current context",
+        });
+      }
     } catch (error) {
       console.error('Error generating suggestions:', error);
       toast({
