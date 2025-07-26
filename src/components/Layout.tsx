@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import Navigation from "./Navigation";
+import EmergencyButton from "./EmergencyButton";
 
 const Layout = () => {
   return (
@@ -8,6 +9,7 @@ const Layout = () => {
       <main className="flex-1">
         <Outlet />
       </main>
+      <EmergencyButton />
     </div>
   );
 };
