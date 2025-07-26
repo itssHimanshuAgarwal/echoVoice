@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,11 +24,12 @@ const Auth = () => {
     confirmPassword: "" 
   });
 
-  // Redirect if already authenticated
-  if (user && !loading) {
-    navigate('/');
-    return null;
-  }
+  // Redirect when user is authenticated (handles OAuth callback)
+  useEffect(() => {
+    if (user && !loading) {
+      navigate('/', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
