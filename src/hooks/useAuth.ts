@@ -24,21 +24,55 @@ export const useAuth = (): AuthContextType => {
   useEffect(() => {
     let mounted = true;
     
-    // Get initial session immediately
-    const getInitialSession = async () => {
+    console.log('Starting auth initialization...');
+    
+    // Force check localStorage for existing session
+    const checkStoredSession = () => {
       try {
+        const storedSession = localStorage.getItem('supabase.auth.token');
+        console.log('Stored session exists:', !!storedSession);
+        
+        if (storedSession) {
+          const parsed = JSON.parse(storedSession);
+          console.log('Parsed session:', parsed);
+        }
+      } catch (error) {
+        console.error('Error checking stored session:', error);
+      }
+    };
+    
+    checkStoredSession();
+    
+    // Get initial session with retry
+    const getInitialSession = async (retries = 3) => {
+      try {
+        console.log('Getting initial session, retries left:', retries);
         const { data: { session }, error } = await supabase.auth.getSession();
+        
         if (!mounted) return;
         
-        console.log('Initial session check:', session?.user?.id, error);
+        console.log('Initial session result:', session?.user?.id, error);
+        
         if (session) {
           setSession(session);
           setUser(session.user);
+          setLoading(false);
+          console.log('Session restored successfully');
+        } else if (retries > 0) {
+          // Retry after a short delay
+          setTimeout(() => getInitialSession(retries - 1), 500);
+          return;
+        } else {
+          setLoading(false);
+          console.log('No session found after retries');
         }
-        setLoading(false);
       } catch (error) {
         console.error('Error getting session:', error);
-        if (mounted) setLoading(false);
+        if (mounted && retries > 0) {
+          setTimeout(() => getInitialSession(retries - 1), 500);
+        } else if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -51,21 +85,21 @@ export const useAuth = (): AuthContextType => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Only set loading to false after we've processed the auth change
-        if (event !== 'INITIAL_SESSION') {
-          setLoading(false);
-        }
-        
         if (event === 'SIGNED_IN') {
+          setLoading(false);
           toast({
             title: "Welcome!",
             description: "You've been signed in successfully.",
           });
         } else if (event === 'SIGNED_OUT') {
+          setLoading(false);
           toast({
             title: "Signed out", 
             description: "You've been signed out successfully.",
           });
+        } else if (event === 'TOKEN_REFRESHED') {
+          setLoading(false);
+          console.log('Token refreshed successfully');
         }
       }
     );
