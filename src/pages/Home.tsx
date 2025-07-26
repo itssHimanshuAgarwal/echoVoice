@@ -2,12 +2,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Mic, Volume2, MapPin, Clock, User, Copy, Play, RefreshCw, VolumeX } from "lucide-react";
+import { Mic, Volume2, MapPin, Clock, User, Copy, Play, RefreshCw, VolumeX, Settings } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useEchoVoice } from "@/hooks/useEchoVoice";
+import { PersonSelector } from "@/components/PersonSelector";
+import { LocationSelector } from "@/components/LocationSelector";
+import { CustomMessageInput } from "@/components/CustomMessageInput";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedPhrase, setSelectedPhrase] = useState<string>("");
   const [animatingCard, setAnimatingCard] = useState<number | null>(null);
@@ -19,39 +24,48 @@ const Home = () => {
     isSpeaking,
     suggestions,
     settings,
+    people,
+    locations,
+    quickActions,
+    currentPerson,
+    currentLocation,
     generateSuggestions,
     speakPhrase,
-    loadSettings,
+    loadInitialData,
     stopSpeaking,
+    setCurrentPerson,
+    setCurrentLocation,
   } = useEchoVoice();
 
-  // Real-time context data
+  // Dynamic context data based on selections
   const contextData = {
     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    location: "Living Room", // Will be dynamic in future
-    detectedPerson: "Sarah (Caregiver)" // Will be dynamic in future
+    location: currentLocation?.name || "No location",
+    detectedPerson: currentPerson?.name || "No one selected"
   };
 
   useEffect(() => {
-    loadSettings();
-    
-    // Generate initial suggestions based on current context
+    loadInitialData();
+  }, [loadInitialData]);
+
+  useEffect(() => {
+    // Generate suggestions when context changes
     const currentContext = {
       timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening',
-      location: contextData.location,
-      person: contextData.detectedPerson.split(' ')[0], // Extract first name
-      style: settings.communication_style,
+      location: currentLocation?.name || 'general',
+      person: currentPerson?.name || undefined,
+      style: currentPerson?.communication_style || settings.communication_style,
     };
     
     generateSuggestions(currentContext);
-  }, [loadSettings, generateSuggestions, settings.communication_style]);
+  }, [currentPerson, currentLocation, settings.communication_style, generateSuggestions]);
 
   const refreshSuggestions = () => {
     const currentContext = {
       timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening',
-      location: contextData.location,
-      person: contextData.detectedPerson.split(' ')[0],
-      style: settings.communication_style,
+      location: currentLocation?.name || 'general',
+      person: currentPerson?.name || undefined,
+      style: currentPerson?.communication_style || settings.communication_style,
     };
     
     generateSuggestions(currentContext);
@@ -61,7 +75,7 @@ const Home = () => {
     setSelectedPhrase(phrase);
     
     // Trigger card animation
-    if (cardId) {
+    if (cardId !== undefined) {
       setAnimatingCard(cardId);
       setSpeakingButton(cardId);
       setTimeout(() => setAnimatingCard(null), 600);
@@ -70,6 +84,16 @@ const Home = () => {
     
     // Use the new EchoVoice speakPhrase function
     await speakPhrase(phrase, 'ai_suggested');
+  };
+
+  const handleQuickActionSpeak = async (phrase: string, index: number) => {
+    setSelectedPhrase(phrase);
+    setAnimatingCard(index + 100);
+    setSpeakingButton(index + 100);
+    setTimeout(() => setAnimatingCard(null), 600);
+    setTimeout(() => setSpeakingButton(null), 1500);
+    
+    await speakPhrase(phrase, 'quick_action');
   };
 
   const createRipple = (event: React.MouseEvent, cardId: number) => {
@@ -108,8 +132,32 @@ const Home = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
-      {/* Context Information Panel */}
+    <div className="max-w-6xl mx-auto p-6 space-y-8">
+      {/* Header with Settings Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold font-display">EchoVoice</h1>
+          <p className="text-muted-foreground">Your intelligent communication assistant</p>
+        </div>
+        <Button variant="outline" onClick={() => navigate('/settings')}>
+          <Settings className="h-4 w-4 mr-2" />
+          Settings
+        </Button>
+      </div>
+
+      {/* Dynamic Context Panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PersonSelector 
+          onPersonSelect={setCurrentPerson}
+          selectedPerson={currentPerson}
+        />
+        <LocationSelector 
+          onLocationSelect={setCurrentLocation}
+          selectedLocation={currentLocation}
+        />
+      </div>
+
+      {/* Current Context Display */}
       <Card className="context-section">
         <CardHeader className="pb-5">
           <CardTitle className="text-lg font-display">Current Context</CardTitle>
@@ -139,7 +187,7 @@ const Home = () => {
                 <User className="h-5 w-5 text-success" />
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Detected</div>
+                <div className="text-sm text-muted-foreground">With</div>
                 <div className="font-medium">{contextData.detectedPerson}</div>
               </div>
             </div>
@@ -152,9 +200,9 @@ const Home = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-lg font-display">Suggested Phrases</CardTitle>
+              <CardTitle className="text-lg font-display">Smart Suggestions</CardTitle>
               <CardDescription>
-                AI-powered suggestions based on your context
+                Personalized phrases based on your context and preferences
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -181,7 +229,7 @@ const Home = () => {
         <CardContent className="space-y-4">
           {suggestions.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
-              {isLoading ? "Generating suggestions..." : "No suggestions available. Try refreshing."}
+              {isLoading ? "Generating personalized suggestions..." : "No suggestions available. Try selecting a person or location, then refresh."}
             </div>
           ) : (
             suggestions.map((suggestion, index) => (
@@ -243,12 +291,12 @@ const Home = () => {
           <CardContent className="p-5">
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <div className="text-sm text-muted-foreground mb-2 font-medium">Selected phrase:</div>
+                <div className="text-sm text-muted-foreground mb-2 font-medium">Last spoken phrase:</div>
                 <div className="text-lg font-medium font-display">{selectedPhrase}</div>
               </div>
               <div className="flex gap-2">
                 <Button 
-                variant="outline"
+                  variant="outline"
                   size="sm"
                   onClick={() => navigator.clipboard.writeText(selectedPhrase)}
                 >
@@ -273,39 +321,56 @@ const Home = () => {
         <CardHeader>
           <CardTitle className="text-lg font-display">Quick Actions</CardTitle>
           <CardDescription>
-            Common phrases and custom input
+            Your most-used phrases for instant communication
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-            {["Yes", "No", "Thank you", "Help", "Water", "Tired"].map((phrase, index) => (
-              <Button
-                key={phrase}
-                variant="outline"
-                size="xl"
-                className="h-16 text-base font-medium relative overflow-hidden group"
-                onClick={(e) => {
-                  createRipple(e, index + 100); // Use offset ID for quick phrases
-                  handleSpeakPhrase(phrase);
-                }}
-              >
-                <Volume2 className="h-4 w-4 mr-2 text-primary" />
-                {phrase}
-              </Button>
-            ))}
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button size="xl" className="flex-1 h-16" variant="gentle">
-              <Mic className="h-5 w-5 mr-3" />
-              Record Custom Message
-            </Button>
-            <Button variant="outline" size="xl" className="flex-1 h-16">
-              Type Custom Message
-            </Button>
+            {quickActions.length > 0 ? (
+              quickActions.map((action, index) => (
+                <Button
+                  key={action.id}
+                  variant="outline"
+                  size="xl"
+                  className={cn(
+                    "h-16 text-base font-medium relative overflow-hidden group",
+                    speakingButton === index + 100 && 'animate-speak-ready'
+                  )}
+                  onClick={(e) => {
+                    createRipple(e, index + 100);
+                    handleQuickActionSpeak(action.phrase, index);
+                  }}
+                >
+                  <Volume2 className="h-4 w-4 mr-2 text-primary" />
+                  {action.phrase}
+                </Button>
+              ))
+            ) : (
+              ["Yes", "No", "Thank you", "Help", "Water", "Tired"].map((phrase, index) => (
+                <Button
+                  key={phrase}
+                  variant="outline"
+                  size="xl"
+                  className={cn(
+                    "h-16 text-base font-medium relative overflow-hidden group",
+                    speakingButton === index + 100 && 'animate-speak-ready'
+                  )}
+                  onClick={(e) => {
+                    createRipple(e, index + 100);
+                    handleQuickActionSpeak(phrase, index);
+                  }}
+                >
+                  <Volume2 className="h-4 w-4 mr-2 text-primary" />
+                  {phrase}
+                </Button>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Custom Message Input */}
+      <CustomMessageInput />
     </div>
   );
 };
