@@ -7,6 +7,7 @@ export interface PhraseContext {
   location?: string;
   person?: string;
   style?: 'formal' | 'balanced' | 'casual';
+  emotion?: string;
   recentHistory?: string[];
 }
 

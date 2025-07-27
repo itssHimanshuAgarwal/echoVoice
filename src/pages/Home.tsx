@@ -9,9 +9,11 @@ import { useEchoVoice } from "@/hooks/useEchoVoice";
 import { PersonSelector } from "@/components/PersonSelector";
 import { LocationSelector } from "@/components/LocationSelector";
 import { CustomMessageInput } from "@/components/CustomMessageInput";
+import { EmotionDetector } from "@/components/EmotionDetector";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
+import { useEmotionDetection } from "@/hooks/useEmotionDetection";
+import { Loader2, Brain } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -23,6 +25,7 @@ const Home = () => {
   const rippleRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   
   const { user } = useAuth();
+  const { currentEmotion } = useEmotionDetection();
   const {
     isLoading,
     isSpeaking,
@@ -45,7 +48,8 @@ const Home = () => {
   const contextData = {
     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     location: currentLocation?.name || "No location",
-    detectedPerson: currentPerson?.name || "No one selected"
+    detectedPerson: currentPerson?.name || "No one selected",
+    emotion: currentEmotion
   };
 
   useEffect(() => {
@@ -71,6 +75,7 @@ const Home = () => {
       location: currentLocation?.name || 'general',
       person: currentPerson?.name || undefined,
       style: currentPerson?.communication_style || settings.communication_style,
+      emotion: currentEmotion,
     };
     
     generateSuggestions(currentContext);
@@ -82,6 +87,7 @@ const Home = () => {
       location: currentLocation?.name || 'general',
       person: currentPerson?.name || undefined,
       style: currentPerson?.communication_style || settings.communication_style,
+      emotion: currentEmotion,
     };
     
     generateSuggestions(currentContext);
@@ -167,7 +173,7 @@ const Home = () => {
       </div>
 
       {/* Dynamic Context Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <PersonSelector 
           onPersonSelect={setCurrentPerson}
           selectedPerson={currentPerson}
@@ -176,6 +182,7 @@ const Home = () => {
           onLocationSelect={setCurrentLocation}
           selectedLocation={currentLocation}
         />
+        <EmotionDetector />
       </div>
 
       {/* Current Context Display */}
@@ -184,7 +191,7 @@ const Home = () => {
           <CardTitle className="text-lg font-display">Current Context</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border/30 shadow-[var(--shadow-soft)]">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <Clock className="h-5 w-5 text-primary" />
@@ -210,6 +217,15 @@ const Home = () => {
               <div>
                 <div className="text-sm text-muted-foreground">With</div>
                 <div className="font-medium">{contextData.detectedPerson}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border/30 shadow-[var(--shadow-soft)]">
+              <div className="p-2 bg-warning/10 rounded-lg">
+                <Brain className="h-5 w-5 text-warning" />
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Emotion</div>
+                <div className="font-medium capitalize">{contextData.emotion}</div>
               </div>
             </div>
           </div>
