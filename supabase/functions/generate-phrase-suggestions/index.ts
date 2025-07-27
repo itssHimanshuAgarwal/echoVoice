@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 async function generateAIPhrases(context: any) {
-  const { timeOfDay, location, person, style } = context;
+  const { currentEmotion, currentTime, currentLocation, nearbyPerson } = context;
   const apiKey = Deno.env.get('GOOGLE_AI_API_KEY');
   
   console.log('Starting AI phrase generation with context:', context);
@@ -17,46 +17,37 @@ async function generateAIPhrases(context: any) {
     return getFallbackSuggestions(context);
   }
 
-  const currentHour = new Date().getHours();
-  const timeContext = currentHour < 12 ? 'morning' : currentHour < 17 ? 'afternoon' : 'evening';
+  // Create an empathetic, context-aware prompt
+  let prompt = `You are an empathetic AI speech assistant. The user is currently feeling ${currentEmotion || 'neutral'}`;
   
-  const prompt = `You are an AI assistant helping someone with communication challenges create contextual phrases for their specific situation.
-
-CONTEXT:
-- Time: ${timeContext} (${currentHour}:00)
-- Location: ${location || 'unspecified location'}
-- Person present: ${person || 'no specific person'}
-- Communication style: ${style || 'casual'}
-
-Generate 4 highly specific and contextual phrase suggestions that would be most useful for this exact scenario. Consider:
-
-FOR KITCHEN context: hunger, thirst, cooking help, meal preferences, dietary needs
-FOR BEDROOM context: sleep, dressing, comfort, rest, personal care
-FOR BATHROOM context: privacy, assistance needs, hygiene, accessibility
-FOR LIVING ROOM context: social interaction, entertainment, comfort, visitors
-FOR MEDICAL context: pain levels, medication, symptoms, appointments
-
-FOR MORNING (6-11am): morning routines, breakfast, daily planning, energy levels
-FOR AFTERNOON (12-5pm): lunch, activities, energy maintenance, social time  
-FOR EVENING (6-11pm): dinner, relaxation, end-of-day routines, reflection
-
-WHEN PERSON IS PRESENT: direct communication, specific requests, social phrases
-WHEN ALONE: self-advocacy, calling for help, expressing needs clearly
-
-Requirements:
-- Each phrase must be 3-8 words maximum
-- Must be immediately actionable or expressively useful
-- Vary emotional tone (urgent/calm/polite/direct)
-- Consider accessibility and dignity
-- Make them sound natural, not robotic
+  if (currentTime) {
+    prompt += `, it is ${currentTime}`;
+  }
+  
+  if (currentLocation) {
+    prompt += ` in the ${currentLocation}`;
+  }
+  
+  if (nearbyPerson) {
+    prompt += `, and ${nearbyPerson} is nearby`;
+  }
+  
+  prompt += `. Suggest 3–4 short, emotionally relevant phrases they might want to say. Keep them helpful, polite, and supportive.
 
 Return ONLY this JSON format:
 [
-  {"phrase": "[highly specific contextual phrase]", "priority": "high", "category": "needs"},
-  {"phrase": "[another specific phrase]", "priority": "medium", "category": "assistance"},
-  {"phrase": "[context-aware phrase]", "priority": "high", "category": "social"},
-  {"phrase": "[situational phrase]", "priority": "medium", "category": "gratitude"}
-]`;
+  {"phrase": "[emotionally appropriate phrase]", "priority": "high", "category": "emotion"},
+  {"phrase": "[contextual phrase]", "priority": "medium", "category": "social"},
+  {"phrase": "[supportive phrase]", "priority": "high", "category": "needs"},
+  {"phrase": "[caring phrase]", "priority": "medium", "category": "gratitude"}
+]
+
+Requirements:
+- Each phrase must be 3-12 words maximum
+- Emotionally appropriate for feeling ${currentEmotion || 'neutral'}
+- Relevant to the current time and location context
+- Helpful for expressing needs or emotions
+- Keep them natural and supportive`;
 
   try {
     console.log('Calling Google AI with enhanced prompt');
@@ -106,42 +97,49 @@ Return ONLY this JSON format:
 }
 
 function getFallbackSuggestions(context: any) {
-  const { location, person, style } = context;
+  const { currentLocation, nearbyPerson, currentEmotion } = context;
   const currentHour = new Date().getHours();
   const timeContext = currentHour < 12 ? 'morning' : currentHour < 17 ? 'afternoon' : 'evening';
   
-  // Enhanced contextual fallback based on location and time
+  // Enhanced contextual fallback based on emotion and location
   const suggestions = [];
   
-  if (location?.toLowerCase() === 'kitchen') {
-    if (currentHour < 12) {
-      suggestions.push({ phrase: "I need breakfast please", priority: "high", category: "needs" });
-      suggestions.push({ phrase: "Coffee would be great", priority: "medium", category: "needs" });
-    } else if (currentHour < 17) {
-      suggestions.push({ phrase: "I'm hungry for lunch", priority: "high", category: "needs" });
-      suggestions.push({ phrase: "Something to drink please", priority: "medium", category: "needs" });
-    } else {
-      suggestions.push({ phrase: "What's for dinner?", priority: "high", category: "needs" });
-      suggestions.push({ phrase: "I'm quite thirsty", priority: "medium", category: "needs" });
-    }
-  } else if (location?.toLowerCase() === 'bedroom') {
-    suggestions.push({ phrase: "Help me get dressed", priority: "high", category: "assistance" });
-    suggestions.push({ phrase: "I need to rest", priority: "medium", category: "needs" });
-  } else if (location?.toLowerCase() === 'bathroom') {
-    suggestions.push({ phrase: "I need privacy please", priority: "high", category: "privacy" });
-    suggestions.push({ phrase: "Please wait outside", priority: "medium", category: "privacy" });
+  // Emotion-based suggestions
+  if (currentEmotion === 'sad') {
+    suggestions.push({ phrase: "I'm feeling sad right now", priority: "high", category: "emotion" });
+    suggestions.push({ phrase: "I could use some comfort", priority: "high", category: "needs" });
+  } else if (currentEmotion === 'happy') {
+    suggestions.push({ phrase: "I'm feeling really good today", priority: "high", category: "emotion" });
+    suggestions.push({ phrase: "Thank you for being here", priority: "medium", category: "gratitude" });
+  } else if (currentEmotion === 'tired') {
+    suggestions.push({ phrase: "I'm feeling quite tired", priority: "high", category: "emotion" });
+    suggestions.push({ phrase: "I need to rest", priority: "high", category: "needs" });
   } else {
-    suggestions.push({ phrase: "I need some help", priority: "high", category: "assistance" });
-    suggestions.push({ phrase: `Good ${timeContext}`, priority: "medium", category: "greeting" });
+    suggestions.push({ phrase: "I'm doing okay", priority: "medium", category: "emotion" });
+    suggestions.push({ phrase: "How are you doing?", priority: "medium", category: "social" });
   }
   
-  if (person) {
-    suggestions.push({ phrase: `Thank you ${person}`, priority: "medium", category: "gratitude" });
+  // Location-based suggestions
+  if (currentLocation?.toLowerCase().includes('kitchen')) {
+    if (currentHour < 12) {
+      suggestions.push({ phrase: "I need breakfast please", priority: "high", category: "needs" });
+    } else if (currentHour < 17) {
+      suggestions.push({ phrase: "I'm hungry for lunch", priority: "high", category: "needs" });
+    } else {
+      suggestions.push({ phrase: "What's for dinner?", priority: "high", category: "needs" });
+    }
+  } else if (currentLocation?.toLowerCase().includes('bedroom')) {
+    suggestions.push({ phrase: "I need to rest", priority: "medium", category: "needs" });
+  } else {
+    suggestions.push({ phrase: `Good ${timeContext}`, priority: "medium", category: "social" });
+  }
+  
+  // Person-specific suggestions
+  if (nearbyPerson) {
+    suggestions.push({ phrase: `Thank you ${nearbyPerson}`, priority: "medium", category: "gratitude" });
   } else {
     suggestions.push({ phrase: "Thank you so much", priority: "medium", category: "gratitude" });
   }
-  
-  suggestions.push({ phrase: "I appreciate your help", priority: "low", category: "gratitude" });
   
   return suggestions.slice(0, 4);
 }

@@ -3,12 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface PhraseContext {
-  timeOfDay?: string;
-  location?: string;
-  person?: string;
-  style?: 'formal' | 'balanced' | 'casual';
-  emotion?: string;
-  recentHistory?: string[];
+  currentEmotion?: string;
+  currentTime?: string;
+  currentLocation?: string;
+  nearbyPerson?: string;
 }
 
 export interface PhraseSuggestion {
@@ -160,7 +158,7 @@ export const useEchoVoice = () => {
       console.log('Generating suggestions with context:', context);
       
       const { data, error } = await supabase.functions.invoke('generate-phrase-suggestions', {
-        body: { context: { ...context, style: settings.communication_style } }
+        body: { context }
       });
 
       console.log('Suggestion response:', { data, error });
@@ -187,7 +185,7 @@ export const useEchoVoice = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [settings.communication_style, settings.context_detection, toast]);
+  }, [settings.context_detection, toast]);
 
   const speakPhrase = useCallback(async (text: string, phraseType: string = 'custom') => {
     if (isSpeaking) return;

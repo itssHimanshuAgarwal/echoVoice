@@ -78,23 +78,21 @@ const Home = () => {
   useEffect(() => {
     // Generate suggestions when context changes
     const currentContext = {
-      timeOfDay: autoTime?.timeOfDay || (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
-      location: autoLocation?.readableLocation || currentLocation?.name || 'general',
-      person: nearbyPerson || currentPerson?.name || undefined,
-      style: currentPerson?.communication_style || settings.communication_style,
-      emotion: currentEmotion,
+      currentEmotion: currentEmotion || 'neutral',
+      currentTime: autoTime?.currentTime ? `${autoTime.currentTime}, ${autoTime.timeOfDay}` : undefined,
+      currentLocation: autoLocation?.readableLocation || currentLocation?.name || 'general',
+      nearbyPerson: nearbyPerson || currentPerson?.name || undefined,
     };
     
     generateSuggestions(currentContext);
-  }, [currentPerson, currentLocation, settings.communication_style, generateSuggestions, autoTime?.timeOfDay, autoLocation?.readableLocation, currentEmotion, nearbyPerson]);
+  }, [currentPerson, currentLocation, generateSuggestions, autoTime?.timeOfDay, autoTime?.currentTime, autoLocation?.readableLocation, currentEmotion, nearbyPerson]);
 
   const refreshSuggestions = () => {
     const currentContext = {
-      timeOfDay: autoTime?.timeOfDay || (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
-      location: autoLocation?.readableLocation || currentLocation?.name || 'general',
-      person: nearbyPerson || currentPerson?.name || undefined,
-      style: currentPerson?.communication_style || settings.communication_style,
-      emotion: currentEmotion,
+      currentEmotion: currentEmotion || 'neutral',
+      currentTime: autoTime?.currentTime ? `${autoTime.currentTime}, ${autoTime.timeOfDay}` : undefined,
+      currentLocation: autoLocation?.readableLocation || currentLocation?.name || 'general',
+      nearbyPerson: nearbyPerson || currentPerson?.name || undefined,
     };
     
     generateSuggestions(currentContext);
