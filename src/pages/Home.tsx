@@ -10,15 +10,12 @@ import { PersonSelector } from "@/components/PersonSelector";
 import { LocationSelector } from "@/components/LocationSelector";
 import { CustomMessageInput } from "@/components/CustomMessageInput";
 import { EmotionDetector } from "@/components/EmotionDetector";
-import { AutoLocationDetector } from "@/components/AutoLocationDetector";
-import { FaceRecognition } from "@/components/FaceRecognition";
 import { PhraseHistory } from "@/components/PhraseHistory";
 import EmergencyButton from "@/components/EmergencyButton";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmotionDetection } from "@/hooks/useEmotionDetection";
 import { useAutoLocation } from "@/hooks/useAutoLocation";
-import { useFaceRecognition } from "@/hooks/useFaceRecognition";
 import { usePhraseHistory } from "@/hooks/usePhraseHistory";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { SettingsPanel } from "@/components/SettingsPanel";
@@ -35,8 +32,7 @@ const Home = () => {
 
   // Hooks
   const { currentEmotion } = useEmotionDetection();
-  const { currentTime, currentLocation: autoLocationData } = useAutoLocation();
-  const { nearbyPerson } = useFaceRecognition();
+  const { currentTime } = useAutoLocation();
 
   const {
     isLoading,
@@ -74,31 +70,27 @@ const Home = () => {
   }, [loadInitialData, user]);
 
   useEffect(() => {
-    // Only generate suggestions if detection features are enabled
-    if (!appSettings.emotionDetection && !appSettings.locationDetection) return;
-    
-    // Generate suggestions when context changes
+    // Generate suggestions automatically when context changes
     const currentContext = {
-      currentEmotion: appSettings.emotionDetection ? (currentEmotion || 'neutral') : undefined,
+      currentEmotion: appSettings.emotionDetection ? (currentEmotion || 'neutral') : 'neutral',
       currentTime: currentTime ? `${currentTime.currentTime}, ${currentTime.timeOfDay}` : undefined,
-      currentLocation: appSettings.locationDetection ? (autoLocationData?.readableLocation || currentLocation?.name || 'general') : undefined,
-      nearbyPerson: nearbyPerson || currentPerson?.name || undefined,
+      currentLocation: currentLocation?.name || 'general',
+      nearbyPerson: currentPerson?.name || undefined,
       toneModifier: getTonePromptModifier(),
     };
     
-    console.log('Generating suggestions with context:', currentContext);
+    console.log('🔄 CONTEXT CHANGED - Generating new suggestions:', currentContext);
     generateSuggestions(currentContext);
-  }, [currentPerson, currentLocation, generateSuggestions, currentTime?.timeOfDay, currentTime?.currentTime, autoLocationData?.readableLocation, currentEmotion, nearbyPerson, appSettings, getTonePromptModifier]);
+  }, [currentEmotion, currentPerson, currentLocation, generateSuggestions, currentTime?.timeOfDay, currentTime?.currentTime, appSettings.emotionDetection, getTonePromptModifier]);
 
   const refreshSuggestions = () => {
-    // Only generate suggestions if detection features are enabled
-    if (!appSettings.emotionDetection && !appSettings.locationDetection) return;
+    // Always generate suggestions now
     
     const currentContext = {
-      currentEmotion: appSettings.emotionDetection ? (currentEmotion || 'neutral') : undefined,
+      currentEmotion: appSettings.emotionDetection ? (currentEmotion || 'neutral') : 'neutral',
       currentTime: currentTime ? `${currentTime.currentTime}, ${currentTime.timeOfDay}` : undefined,
-      currentLocation: appSettings.locationDetection ? (autoLocationData?.readableLocation || currentLocation?.name || 'general') : undefined,
-      nearbyPerson: nearbyPerson || currentPerson?.name || undefined,
+      currentLocation: currentLocation?.name || 'general',
+      nearbyPerson: currentPerson?.name || undefined,
       toneModifier: getTonePromptModifier(),
     };
     
@@ -112,8 +104,8 @@ const Home = () => {
     addToHistory(
       phrase,
       currentEmotion,
-      autoLocationData?.readableLocation || currentLocation?.name,
-      nearbyPerson || currentPerson?.name,
+      currentLocation?.name,
+      currentPerson?.name,
       'ai_suggested'
     );
     
@@ -136,8 +128,8 @@ const Home = () => {
     addToHistory(
       phrase,
       currentEmotion,
-      autoLocationData?.readableLocation || currentLocation?.name,
-      nearbyPerson || currentPerson?.name,
+      currentLocation?.name,
+      currentPerson?.name,
       'quick_action'
     );
     
@@ -158,8 +150,8 @@ const Home = () => {
     addToHistory(
       message,
       currentEmotion || 'urgent',
-      autoLocationData?.readableLocation || currentLocation?.name || 'unknown location',
-      nearbyPerson || currentPerson?.name || 'no one nearby',
+      currentLocation?.name || 'unknown location',
+      currentPerson?.name || 'no one nearby',
       'emergency'
     );
     
@@ -237,13 +229,13 @@ const Home = () => {
             {/* Context Detection Row */}
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-foreground">Context Detection</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {appSettings.emotionDetection && (
                   <Card className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
                         <Heart className="h-4 w-4 text-red-500" />
-                        Emotion
+                        Emotion Detection
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -252,29 +244,22 @@ const Home = () => {
                   </Card>
                 )}
                 
-                {appSettings.locationDetection && (
-                  <Card className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-blue-500" />
-                        Location
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <AutoLocationDetector />
-                    </CardContent>
-                  </Card>
-                )}
-                
                 <Card className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <User className="h-4 w-4 text-green-500" />
-                      Face Recognition
+                      <Clock className="h-4 w-4 text-blue-500" />
+                      Time Context
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <FaceRecognition />
+                    <div className="space-y-2">
+                      {currentTime && (
+                        <div className="bg-muted/50 rounded-lg p-3">
+                          <div className="text-lg font-mono font-bold">{currentTime.currentTime}</div>
+                          <div className="text-sm text-muted-foreground capitalize">{currentTime.timeOfDay}</div>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -282,7 +267,7 @@ const Home = () => {
 
             {/* Manual Context Selection */}
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-foreground">Manual Selection</h2>
+              <h2 className="text-lg font-semibold text-foreground">Context Selection</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
@@ -443,8 +428,8 @@ const Home = () => {
               <h2 className="text-lg font-semibold text-foreground">Custom Messages</h2>
               <CustomMessageInput 
                 currentEmotion={currentEmotion}
-                currentLocation={autoLocationData?.readableLocation || currentLocation?.name}
-                currentPerson={nearbyPerson || currentPerson?.name}
+                currentLocation={currentLocation?.name}
+                currentPerson={currentPerson?.name}
                 onPhraseSpoken={handleCustomPhraseSpoken}
               />
             </div>
@@ -461,7 +446,7 @@ const Home = () => {
       {/* Emergency Button - Fixed positioning */}
       <EmergencyButton 
         onEmergencyActivated={handleEmergencyActivated}
-        userLocation={autoLocationData?.readableLocation || currentLocation?.name || 'Location unknown'}
+        userLocation={currentLocation?.name || 'Location unknown'}
         userName={user?.email?.split('@')[0] || 'EchoVoice user'}
       />
     </div>

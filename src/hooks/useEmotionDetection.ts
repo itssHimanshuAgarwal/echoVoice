@@ -105,7 +105,9 @@ export const useEmotionDetection = () => {
       const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
       const randomConfidence = Math.random() * 0.4 + 0.6; // 60-100% confidence
       
-      console.log('New emotion detected:', randomEmotion, 'confidence:', randomConfidence);
+      console.log('🎭 NEW EMOTION DETECTED:', randomEmotion, 'confidence:', randomConfidence);
+      
+      // Show a subtle toast to user about emotion change
       setCurrentEmotion(randomEmotion);
       setConfidence(randomConfidence);
       
