@@ -12,11 +12,13 @@ import { CustomMessageInput } from "@/components/CustomMessageInput";
 import { EmotionDetector } from "@/components/EmotionDetector";
 import { AutoLocationDetector } from "@/components/AutoLocationDetector";
 import { FaceRecognition } from "@/components/FaceRecognition";
+import { PhraseHistory } from "@/components/PhraseHistory";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmotionDetection } from "@/hooks/useEmotionDetection";
 import { useAutoLocation } from "@/hooks/useAutoLocation";
 import { useFaceRecognition } from "@/hooks/useFaceRecognition";
+import { usePhraseHistory } from "@/hooks/usePhraseHistory";
 import { Loader2, Brain } from "lucide-react";
 
 const Home = () => {
@@ -49,6 +51,8 @@ const Home = () => {
     setCurrentPerson,
     setCurrentLocation,
   } = useEchoVoice();
+  
+  const { addToHistory } = usePhraseHistory();
 
   // Dynamic context data based on selections and auto-detection
   const contextData = {
@@ -101,6 +105,15 @@ const Home = () => {
   const handleSpeakPhrase = async (phrase: string, cardId?: number) => {
     setSelectedPhrase(phrase);
     
+    // Add to history with current context
+    addToHistory(
+      phrase,
+      currentEmotion,
+      autoLocation?.readableLocation || currentLocation?.name,
+      nearbyPerson || currentPerson?.name,
+      'ai_suggested'
+    );
+    
     // Trigger card animation
     if (cardId !== undefined) {
       setAnimatingCard(cardId);
@@ -115,12 +128,26 @@ const Home = () => {
 
   const handleQuickActionSpeak = async (phrase: string, index: number) => {
     setSelectedPhrase(phrase);
+    
+    // Add to history with current context
+    addToHistory(
+      phrase,
+      currentEmotion,
+      autoLocation?.readableLocation || currentLocation?.name,
+      nearbyPerson || currentPerson?.name,
+      'quick_action'
+    );
+    
     setAnimatingCard(index + 100);
     setSpeakingButton(index + 100);
     setTimeout(() => setAnimatingCard(null), 600);
     setTimeout(() => setSpeakingButton(null), 1500);
     
     await speakPhrase(phrase, 'quick_action');
+  };
+  
+  const handleCustomPhraseSpoken = (phrase: string, emotion?: string, location?: string, person?: string, phraseType?: string) => {
+    addToHistory(phrase, emotion, location, person, phraseType);
   };
 
   const createRipple = (event: React.MouseEvent, cardId: number) => {
@@ -159,7 +186,10 @@ const Home = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+        {/* Main Content Column */}
+        <div className="xl:col-span-3 space-y-8">
       {/* Header with Settings Button and Sign Out */}
       <div className="flex items-center justify-between">
         <div>
@@ -414,7 +444,19 @@ const Home = () => {
       </Card>
 
       {/* Custom Message Input */}
-      <CustomMessageInput />
+      <CustomMessageInput 
+        currentEmotion={currentEmotion}
+        currentLocation={autoLocation?.readableLocation || currentLocation?.name}
+        currentPerson={nearbyPerson || currentPerson?.name}
+        onPhraseSpoken={handleCustomPhraseSpoken}
+      />
+        </div>
+        
+        {/* Sidebar with History */}
+        <div className="xl:col-span-1 space-y-8">
+          <PhraseHistory onSpeakPhrase={handleSpeakPhrase} />
+        </div>
+      </div>
     </div>
   );
 };

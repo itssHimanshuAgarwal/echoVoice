@@ -16,9 +16,19 @@ import { useToast } from "@/hooks/use-toast";
 
 interface CustomMessageInputProps {
   className?: string;
+  currentEmotion?: string;
+  currentLocation?: string;
+  currentPerson?: string;
+  onPhraseSpoken?: (phrase: string, emotion?: string, location?: string, person?: string, phraseType?: string) => void;
 }
 
-export const CustomMessageInput = ({ className }: CustomMessageInputProps) => {
+export const CustomMessageInput = ({ 
+  className, 
+  currentEmotion, 
+  currentLocation, 
+  currentPerson, 
+  onPhraseSpoken 
+}: CustomMessageInputProps) => {
   const { speakPhrase } = useEchoVoice();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -51,6 +61,9 @@ export const CustomMessageInput = ({ className }: CustomMessageInputProps) => {
 
   const handleSpeakCustomMessage = async () => {
     if (!customMessage.trim()) return;
+
+    // Add to history callback
+    onPhraseSpoken?.(customMessage, currentEmotion, currentLocation, currentPerson, 'custom');
 
     // Speak the message
     await speakPhrase(customMessage, 'custom');
@@ -94,6 +107,9 @@ export const CustomMessageInput = ({ className }: CustomMessageInputProps) => {
   };
 
   const handleSpeakFavorite = async (phrase: string, phraseId: string) => {
+    // Add to history callback
+    onPhraseSpoken?.(phrase, currentEmotion, currentLocation, currentPerson, 'favorite');
+    
     await speakPhrase(phrase, 'favorite');
 
     // Update usage count
