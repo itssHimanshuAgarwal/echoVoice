@@ -10,9 +10,11 @@ import { PersonSelector } from "@/components/PersonSelector";
 import { LocationSelector } from "@/components/LocationSelector";
 import { CustomMessageInput } from "@/components/CustomMessageInput";
 import { EmotionDetector } from "@/components/EmotionDetector";
+import { AutoLocationDetector } from "@/components/AutoLocationDetector";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmotionDetection } from "@/hooks/useEmotionDetection";
+import { useAutoLocation } from "@/hooks/useAutoLocation";
 import { Loader2, Brain } from "lucide-react";
 
 const Home = () => {
@@ -26,6 +28,7 @@ const Home = () => {
   
   const { user } = useAuth();
   const { currentEmotion } = useEmotionDetection();
+  const { currentLocation: autoLocation, currentTime: autoTime } = useAutoLocation();
   const {
     isLoading,
     isSpeaking,
@@ -44,10 +47,11 @@ const Home = () => {
     setCurrentLocation,
   } = useEchoVoice();
 
-  // Dynamic context data based on selections
+  // Dynamic context data based on selections and auto-detection
   const contextData = {
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    location: currentLocation?.name || "No location",
+    time: autoTime?.currentTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    timeOfDay: autoTime?.timeOfDay || 'unknown',
+    location: autoLocation?.readableLocation || currentLocation?.name || "No location",
     detectedPerson: currentPerson?.name || "No one selected",
     emotion: currentEmotion
   };
@@ -71,20 +75,20 @@ const Home = () => {
   useEffect(() => {
     // Generate suggestions when context changes
     const currentContext = {
-      timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening',
-      location: currentLocation?.name || 'general',
+      timeOfDay: autoTime?.timeOfDay || (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
+      location: autoLocation?.readableLocation || currentLocation?.name || 'general',
       person: currentPerson?.name || undefined,
       style: currentPerson?.communication_style || settings.communication_style,
       emotion: currentEmotion,
     };
     
     generateSuggestions(currentContext);
-  }, [currentPerson, currentLocation, settings.communication_style, generateSuggestions]);
+  }, [currentPerson, currentLocation, settings.communication_style, generateSuggestions, autoTime?.timeOfDay, autoLocation?.readableLocation, currentEmotion]);
 
   const refreshSuggestions = () => {
     const currentContext = {
-      timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening',
-      location: currentLocation?.name || 'general',
+      timeOfDay: autoTime?.timeOfDay || (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
+      location: autoLocation?.readableLocation || currentLocation?.name || 'general',
       person: currentPerson?.name || undefined,
       style: currentPerson?.communication_style || settings.communication_style,
       emotion: currentEmotion,
@@ -173,7 +177,7 @@ const Home = () => {
       </div>
 
       {/* Dynamic Context Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         <PersonSelector 
           onPersonSelect={setCurrentPerson}
           selectedPerson={currentPerson}
@@ -183,6 +187,7 @@ const Home = () => {
           selectedLocation={currentLocation}
         />
         <EmotionDetector />
+        <AutoLocationDetector />
       </div>
 
       {/* Current Context Display */}
@@ -197,7 +202,7 @@ const Home = () => {
                 <Clock className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Time</div>
+                <div className="text-sm text-muted-foreground">Time ({contextData.timeOfDay})</div>
                 <div className="font-medium">{contextData.time}</div>
               </div>
             </div>
@@ -206,7 +211,7 @@ const Home = () => {
                 <MapPin className="h-5 w-5 text-accent" />
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Location</div>
+                <div className="text-sm text-muted-foreground">Location {autoLocation ? '(Auto)' : '(Manual)'}</div>
                 <div className="font-medium">{contextData.location}</div>
               </div>
             </div>
