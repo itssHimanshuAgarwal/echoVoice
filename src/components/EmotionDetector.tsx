@@ -120,7 +120,7 @@ export const EmotionDetector = () => {
         <div className="text-center text-sm text-muted-foreground">
           {!isInitialized && 'Initializing...'}
           {isInitialized && !isDetecting && 'Ready to detect emotions'}
-          {isDetecting && 'Detecting emotions every 3 seconds...'}
+          {isDetecting && 'Detecting emotions every 5 seconds...'}
         </div>
       </CardContent>
     </Card>
