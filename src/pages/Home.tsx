@@ -86,6 +86,7 @@ const Home = () => {
       toneModifier: getTonePromptModifier(),
     };
     
+    console.log('Generating suggestions with context:', currentContext);
     generateSuggestions(currentContext);
   }, [currentPerson, currentLocation, generateSuggestions, currentTime?.timeOfDay, currentTime?.currentTime, autoLocationData?.readableLocation, currentEmotion, nearbyPerson, appSettings, getTonePromptModifier]);
 
