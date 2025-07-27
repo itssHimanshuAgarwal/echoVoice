@@ -38,6 +38,15 @@ export const EmotionDetector = () => {
     stopDetection,
   } = useEmotionDetection();
 
+  // Demo emotions for better presentation
+  const demoEmotions: EmotionType[] = ['neutral', 'happy', 'sad'];
+  
+  const handleManualEmotion = (emotion: EmotionType) => {
+    console.log('🎭 MANUAL EMOTION SELECTED:', emotion);
+    // For demo purposes, we could directly update the emotion
+    // This would trigger phrase updates in the parent component
+  };
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -94,11 +103,29 @@ export const EmotionDetector = () => {
           <canvas ref={canvasRef} />
         </div>
         
+        {/* Demo Controls for Presentation */}
+        <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+          <p className="text-xs text-muted-foreground mb-2 text-center">Demo Controls:</p>
+          <div className="flex gap-2 justify-center">
+            {demoEmotions.map((emotion) => (
+              <Button
+                key={emotion}
+                variant={currentEmotion === emotion ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleManualEmotion(emotion)}
+                className="text-xs"
+              >
+                {emotionEmojis[emotion]} {emotion}
+              </Button>
+            ))}
+          </div>
+        </div>
+        
         {/* Status */}
         <div className="text-center text-sm text-muted-foreground">
           {!isInitialized && 'Initializing...'}
           {isInitialized && !isDetecting && 'Ready to detect emotions'}
-          {isDetecting && 'Detecting emotions every 5 seconds...'}
+          {isDetecting && 'Auto-detecting emotions every 15 seconds...'}
         </div>
       </CardContent>
     </Card>

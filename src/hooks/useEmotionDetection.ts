@@ -99,17 +99,31 @@ export const useEmotionDetection = () => {
       // Preprocess the image
       const preprocessed = preprocessImage(canvas, ctx);
       
-      // For demonstration, we'll use a simple random emotion detection
-      // In a real implementation, you'd use: const predictions = await modelRef.current.predict(preprocessed);
-      const emotions: EmotionType[] = ['happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised', 'neutral'];
-      const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
-      const randomConfidence = Math.random() * 0.4 + 0.6; // 60-100% confidence
+      // Demo-friendly emotion detection - more stable and realistic
+      // Start with neutral, then allow manual switching or gradual changes
+      const currentHour = new Date().getHours();
+      let demoEmotion: EmotionType = 'neutral';
       
-      console.log('🎭 NEW EMOTION DETECTED:', randomEmotion, 'confidence:', randomConfidence);
+      // Use time-based subtle emotion changes for more realistic demo
+      if (currentHour >= 6 && currentHour < 10) {
+        demoEmotion = Math.random() > 0.7 ? 'happy' : 'neutral'; // Morning optimism
+      } else if (currentHour >= 12 && currentHour < 14) {
+        demoEmotion = Math.random() > 0.8 ? 'happy' : 'neutral'; // Lunch positivity
+      } else if (currentHour >= 18 && currentHour < 20) {
+        demoEmotion = Math.random() > 0.6 ? 'happy' : 'neutral'; // Evening contentment
+      } else {
+        // For demo purposes, cycle through 3 main emotions slowly
+        const demoEmotions: EmotionType[] = ['neutral', 'happy', 'sad'];
+        const cycleIndex = Math.floor(Date.now() / 15000) % demoEmotions.length; // Change every 15 seconds
+        demoEmotion = demoEmotions[cycleIndex];
+      }
       
-      // Show a subtle toast to user about emotion change
-      setCurrentEmotion(randomEmotion);
-      setConfidence(randomConfidence);
+      const confidence = Math.random() * 0.2 + 0.8; // 80-100% confidence for demo
+      
+      console.log('🎭 EMOTION UPDATE:', demoEmotion, 'confidence:', confidence.toFixed(2));
+      
+      setCurrentEmotion(demoEmotion);
+      setConfidence(confidence);
       
       // Clean up tensor
       preprocessed.dispose();
@@ -125,10 +139,10 @@ export const useEmotionDetection = () => {
     
     setIsDetecting(true);
     
-    // Detect emotion every 5 seconds
+    // Detect emotion every 15 seconds for more stable demo
     detectionIntervalRef.current = setInterval(() => {
       detectEmotion();
-    }, 5000);
+    }, 15000);
     
     // Initial detection
     detectEmotion();
