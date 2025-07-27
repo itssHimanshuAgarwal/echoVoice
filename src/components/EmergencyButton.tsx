@@ -6,9 +6,11 @@ import EmergencyModal from "./EmergencyModal";
 
 interface EmergencyButtonProps {
   onEmergencyActivated?: (message: string) => void;
+  userLocation?: string;
+  userName?: string;
 }
 
-const EmergencyButton = ({ onEmergencyActivated }: EmergencyButtonProps) => {
+const EmergencyButton = ({ onEmergencyActivated, userLocation, userName }: EmergencyButtonProps) => {
   const [showModal, setShowModal] = useState(false);
   const [isLongPress, setIsLongPress] = useState(false);
   const [tapCount, setTapCount] = useState(0);
@@ -138,6 +140,8 @@ const EmergencyButton = ({ onEmergencyActivated }: EmergencyButtonProps) => {
         onClose={() => setShowModal(false)} 
         triggerType={isLongPress ? "long-press" : "rapid-tap"}
         onEmergencyActivated={onEmergencyActivated}
+        userLocation={userLocation}
+        userName={userName}
       />
     </>
   );

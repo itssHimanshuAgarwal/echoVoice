@@ -514,7 +514,11 @@ const Home = () => {
       </div>
       
       {/* Emergency Button - Fixed positioning */}
-      <EmergencyButton onEmergencyActivated={handleEmergencyActivated} />
+      <EmergencyButton 
+        onEmergencyActivated={handleEmergencyActivated}
+        userLocation={autoLocation?.readableLocation || currentLocation?.name || 'Location unknown'}
+        userName={user?.email?.split('@')[0] || 'EchoVoice user'}
+      />
     </div>
   );
 };

@@ -2,19 +2,55 @@ import { useState, useEffect } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Phone, MessageSquare, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { AlertTriangle, Phone, MessageSquare, Clock, MapPin, User, Loader2 } from "lucide-react";
 
 interface EmergencyModalProps {
   isOpen: boolean;
   onClose: () => void;
   triggerType: "rapid-tap" | "long-press";
   onEmergencyActivated?: (message: string) => void;
+  userLocation?: string;
+  userName?: string;
 }
 
-const EmergencyModal = ({ isOpen, onClose, triggerType, onEmergencyActivated }: EmergencyModalProps) => {
+const EmergencyModal = ({ isOpen, onClose, triggerType, onEmergencyActivated, userLocation, userName }: EmergencyModalProps) => {
   const { toast } = useToast();
   const [countdown, setCountdown] = useState(10);
   const [isAutoSending, setIsAutoSending] = useState(false);
+  const [isSendingSMS, setIsSendingSMS] = useState(false);
+  const [emergencyContacts, setEmergencyContacts] = useState<Array<{name: string, phone: string}>>([]);
+
+  // Load emergency contacts when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadEmergencyContacts();
+    }
+  }, [isOpen]);
+
+  const loadEmergencyContacts = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
+      const { data, error } = await supabase
+        .from('emergency_contacts')
+        .select('name, phone')
+        .eq('user_id', user.user.id)
+        .eq('is_primary', true);
+
+      if (error) throw error;
+      
+      const contacts = data?.map(contact => ({
+        name: contact.name,
+        phone: contact.phone || ''
+      })).filter(contact => contact.phone) || [];
+      
+      setEmergencyContacts(contacts);
+    } catch (error) {
+      console.error('Error loading emergency contacts:', error);
+    }
+  };
 
   // Auto-send countdown for accessibility
   useEffect(() => {
@@ -36,14 +72,15 @@ const EmergencyModal = ({ isOpen, onClose, triggerType, onEmergencyActivated }: 
     }
   }, [isOpen]);
 
-  const handleSendAlert = () => {
+  const handleSendAlert = async () => {
     const emergencyMessage = "Help me please! This is an emergency!";
     
     // Trigger TTS and history callback immediately
     onEmergencyActivated?.(emergencyMessage);
     
-    // Simulate emergency alert
+    // Set states
     setIsAutoSending(false);
+    setIsSendingSMS(true);
     
     // Visual feedback - flash screen red
     document.body.style.backgroundColor = '#dc2626';
@@ -51,20 +88,44 @@ const EmergencyModal = ({ isOpen, onClose, triggerType, onEmergencyActivated }: 
       document.body.style.backgroundColor = '';
     }, 2000);
 
-    // Show success toast
-    toast({
-      title: "🚨 Emergency Alert Sent!",
-      description: "Help message spoken aloud and logged. Emergency contacts would be notified in a real implementation.",
-      duration: 5000,
-    });
+    try {
+      // Send SMS via Twilio edge function
+      const { data, error } = await supabase.functions.invoke('emergency-sms', {
+        body: {
+          userLocation: userLocation || 'Location unknown',
+          userName: userName || 'EchoVoice user',
+          emergencyMessage,
+          emergencyContacts: emergencyContacts.length > 0 ? emergencyContacts : undefined
+        }
+      });
 
-    // In a real app, this would:
-    // - Send SMS to emergency contacts via Twilio
-    // - Call emergency services if configured
-    // - Send current location data
-    // - Log the emergency event to database
+      if (error) throw error;
 
-    onClose();
+      const successCount = data?.results?.filter((r: any) => r.success).length || 0;
+      const totalContacts = data?.results?.length || 0;
+
+      // Show success toast
+      toast({
+        title: "🚨 Emergency Alert Sent!",
+        description: data?.success 
+          ? `SMS alerts sent to ${successCount}/${totalContacts} emergency contacts. Help message spoken aloud and logged.`
+          : "Help message spoken aloud and logged. SMS sending failed - please try again.",
+        duration: 8000,
+        variant: data?.success ? "default" : "destructive",
+      });
+
+    } catch (error) {
+      console.error('Emergency SMS error:', error);
+      toast({
+        title: "⚠️ Emergency Alert Partial",
+        description: "Help message spoken aloud and logged. SMS sending failed - emergency contacts may not have been notified.",
+        duration: 8000,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingSMS(false);
+      onClose();
+    }
   };
 
   const handleCancel = () => {
@@ -92,18 +153,39 @@ const EmergencyModal = ({ isOpen, onClose, triggerType, onEmergencyActivated }: 
               <div className="space-y-1 text-sm">
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4" />
-                  <span>Notify emergency contacts</span>
+                  <span>
+                    {emergencyContacts.length > 0 
+                      ? `Send SMS to ${emergencyContacts.length} emergency contact${emergencyContacts.length !== 1 ? 's' : ''}` 
+                      : 'Send test SMS (no emergency contacts configured)'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
-                  <span>Send your current location</span>
+                  <span>Speak emergency message aloud</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>Include your current location</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>Include user information</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span>Log emergency event</span>
+                  <span>Log emergency event in history</span>
                 </div>
               </div>
             </div>
+
+            {isSendingSMS && (
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 rounded-lg text-center">
+                <div className="text-blue-700 dark:text-blue-300 font-medium flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Sending SMS alerts...
+                </div>
+              </div>
+            )}
 
             {countdown > 0 && (
               <div className="bg-warning/10 border border-warning p-3 rounded-lg text-center animate-soft-pulse"
