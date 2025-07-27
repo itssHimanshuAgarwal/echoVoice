@@ -69,31 +69,28 @@ const Home = () => {
     }
   }, [loadInitialData, user]);
 
-  // REAL-TIME phrase updates when ANY context changes
+  // FORCE AI suggestions to update immediately on ANY context change
   useEffect(() => {
-    console.log('🔥 CONTEXT CHANGE DETECTED:');
-    console.log('   - Emotion:', currentEmotion);
-    console.log('   - Location:', currentLocation?.name);
-    console.log('   - Person:', currentPerson?.name);
-    console.log('   - Time:', currentTime?.timeOfDay);
+    console.log('🔥🔥🔥 CONTEXT CHANGE DETECTED - FORCING UPDATE');
+    console.log('Emotion:', currentEmotion);
+    console.log('Location:', currentLocation?.name);
+    console.log('Person:', currentPerson?.name);
     
-    const currentContext = {
+    // Force immediate update without waiting for dependencies
+    const context = {
       currentEmotion: currentEmotion || 'neutral',
       currentTime: currentTime ? `${currentTime.currentTime}, ${currentTime.timeOfDay}` : 'current time',
-      currentLocation: currentLocation?.name || 'general location',
+      currentLocation: currentLocation?.name || 'general',
       nearbyPerson: currentPerson?.name || undefined,
-      toneModifier: getTonePromptModifier(),
+      toneModifier: 'Use casual, warm, and friendly language.',
     };
     
-    console.log('🚀 TRIGGERING FRESH AI GENERATION with:', currentContext);
-    generateSuggestions(currentContext);
-  }, [
-    currentEmotion,           // Emotion changes
-    currentLocation?.name,    // Location changes  
-    currentPerson?.name,      // Person changes
-    currentTime?.timeOfDay,   // Time changes
-    generateSuggestions
-  ]);
+    console.log('🚀🚀🚀 CALLING GENERATE SUGGESTIONS NOW:', context);
+    
+    // Call the function directly to bypass any dependency issues
+    generateSuggestions(context).catch(console.error);
+    
+  }, [currentEmotion, currentLocation, currentPerson, currentTime]); // Remove generateSuggestions dependency
 
   const refreshSuggestions = () => {
     console.log('🔄 MANUAL REFRESH TRIGGERED');
