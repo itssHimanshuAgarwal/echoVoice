@@ -154,22 +154,25 @@ export const useEchoVoice = () => {
   }, []);
 
   const generateSuggestions = useCallback(async (context: PhraseContext) => {
-    if (!settings.context_detection) return;
+    // Always generate suggestions regardless of settings
     
     setIsLoading(true);
     try {
-      console.log('Generating suggestions with context:', context);
+      console.log('🚀 CALLING EDGE FUNCTION with context:', context);
       
       const { data, error } = await supabase.functions.invoke('generate-phrase-suggestions', {
         body: { context }
       });
 
-      console.log('Suggestion response:', { data, error });
+      console.log('📩 EDGE FUNCTION RESPONSE:', { data, error });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw error;
+      }
       
       const suggestions = data?.suggestions || [];
-      console.log('Setting suggestions:', suggestions);
+      console.log('✅ NEW SUGGESTIONS RECEIVED:', suggestions);
       setSuggestions(suggestions);
       
       if (suggestions.length === 0) {
@@ -188,7 +191,7 @@ export const useEchoVoice = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [settings.context_detection, toast]);
+  }, [toast]);
 
   // Get available browser voices
   const getBrowserVoices = useCallback(() => {

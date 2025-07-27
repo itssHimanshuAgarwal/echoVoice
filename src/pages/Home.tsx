@@ -79,7 +79,9 @@ const Home = () => {
       toneModifier: getTonePromptModifier(),
     };
     
-    console.log('🔄 CONTEXT CHANGED - Generating new suggestions:', currentContext);
+    console.log('🔄 CONTEXT CHANGED - Emotion:', currentEmotion, 'Time:', currentTime?.timeOfDay);
+    console.log('🔄 Full context:', currentContext);
+    console.log('🔄 Calling generateSuggestions now...');
     generateSuggestions(currentContext);
   }, [currentEmotion, currentPerson, currentLocation, generateSuggestions, currentTime?.timeOfDay, currentTime?.currentTime, appSettings.emotionDetection, getTonePromptModifier]);
 
