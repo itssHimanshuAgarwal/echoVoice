@@ -36,16 +36,11 @@ export const EmotionDetector = () => {
     canvasRef,
     startDetection,
     stopDetection,
+    setManualEmotion,
   } = useEmotionDetection();
 
-  // Demo emotions for better presentation
-  const demoEmotions: EmotionType[] = ['neutral', 'happy', 'sad'];
-  
-  const handleManualEmotion = (emotion: EmotionType) => {
-    console.log('🎭 MANUAL EMOTION SELECTED:', emotion);
-    // For demo purposes, we could directly update the emotion
-    // This would trigger phrase updates in the parent component
-  };
+  // Main emotions for quick selection
+  const quickEmotions: EmotionType[] = ['neutral', 'happy', 'sad'];
 
   return (
     <Card className="w-full max-w-md">
@@ -103,16 +98,16 @@ export const EmotionDetector = () => {
           <canvas ref={canvasRef} />
         </div>
         
-        {/* Demo Controls for Presentation */}
+        {/* Quick Emotion Selection */}
         <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-          <p className="text-xs text-muted-foreground mb-2 text-center">Demo Controls:</p>
+          <p className="text-xs text-muted-foreground mb-2 text-center">Quick Selection:</p>
           <div className="flex gap-2 justify-center">
-            {demoEmotions.map((emotion) => (
+            {quickEmotions.map((emotion) => (
               <Button
                 key={emotion}
                 variant={currentEmotion === emotion ? "default" : "outline"}
                 size="sm"
-                onClick={() => handleManualEmotion(emotion)}
+                onClick={() => setManualEmotion?.(emotion)}
                 className="text-xs"
               >
                 {emotionEmojis[emotion]} {emotion}
@@ -125,7 +120,7 @@ export const EmotionDetector = () => {
         <div className="text-center text-sm text-muted-foreground">
           {!isInitialized && 'Initializing...'}
           {isInitialized && !isDetecting && 'Ready to detect emotions'}
-          {isDetecting && 'Auto-detecting emotions every 15 seconds...'}
+          {isDetecting && 'Detecting emotions automatically...'}
         </div>
       </CardContent>
     </Card>

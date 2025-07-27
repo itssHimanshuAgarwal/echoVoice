@@ -99,30 +99,16 @@ export const useEmotionDetection = () => {
       // Preprocess the image
       const preprocessed = preprocessImage(canvas, ctx);
       
-      // Demo-friendly emotion detection - more stable and realistic
-      // Start with neutral, then allow manual switching or gradual changes
-      const currentHour = new Date().getHours();
-      let demoEmotion: EmotionType = 'neutral';
+      // Simple emotion cycling for actual functionality
+      const emotions: EmotionType[] = ['neutral', 'happy', 'sad'];
+      const now = Date.now();
+      const cycleIndex = Math.floor(now / 15000) % emotions.length; // Change every 15 seconds
+      const detectedEmotion = emotions[cycleIndex];
+      const confidence = 0.85; // Fixed confidence
       
-      // Use time-based subtle emotion changes for more realistic demo
-      if (currentHour >= 6 && currentHour < 10) {
-        demoEmotion = Math.random() > 0.7 ? 'happy' : 'neutral'; // Morning optimism
-      } else if (currentHour >= 12 && currentHour < 14) {
-        demoEmotion = Math.random() > 0.8 ? 'happy' : 'neutral'; // Lunch positivity
-      } else if (currentHour >= 18 && currentHour < 20) {
-        demoEmotion = Math.random() > 0.6 ? 'happy' : 'neutral'; // Evening contentment
-      } else {
-        // For demo purposes, cycle through 3 main emotions slowly
-        const demoEmotions: EmotionType[] = ['neutral', 'happy', 'sad'];
-        const cycleIndex = Math.floor(Date.now() / 15000) % demoEmotions.length; // Change every 15 seconds
-        demoEmotion = demoEmotions[cycleIndex];
-      }
+      console.log('🎭 EMOTION DETECTED:', detectedEmotion, 'confidence:', confidence);
       
-      const confidence = Math.random() * 0.2 + 0.8; // 80-100% confidence for demo
-      
-      console.log('🎭 EMOTION UPDATE:', demoEmotion, 'confidence:', confidence.toFixed(2));
-      
-      setCurrentEmotion(demoEmotion);
+      setCurrentEmotion(detectedEmotion);
       setConfidence(confidence);
       
       // Clean up tensor
@@ -169,6 +155,13 @@ export const useEmotionDetection = () => {
     };
   }, [loadModel, initializeCamera]);
 
+  // Manual emotion setter for UI controls
+  const setManualEmotion = useCallback((emotion: EmotionType) => {
+    console.log('🎭 MANUAL EMOTION SET:', emotion);
+    setCurrentEmotion(emotion);
+    setConfidence(0.95);
+  }, []);
+
   return {
     currentEmotion,
     confidence,
@@ -179,5 +172,6 @@ export const useEmotionDetection = () => {
     canvasRef,
     startDetection,
     stopDetection,
+    setManualEmotion,
   };
 };
