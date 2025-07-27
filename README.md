@@ -2,9 +2,9 @@
 
 ## Purpose
 
-**EchoVoice helps non-verbal users speak with emotional nuance.**
+**EchoVoice is a coopilot that helps non-verbal users speak with emotional nuance.**
 
-It reads their facial expression, senses the context, and suggests relevant, kind phrases. It doesn't replace humans — it augments their ability to express themselves.
+It reads their facial expression, senses the context, and suggests relevant, kind phrases. It doesn't replace humans,  it augments their ability to express themselves.
 
 ### Key Features
 - 🎭 **Emotion Detection**: Reads facial expressions to understand emotional state
@@ -17,25 +17,15 @@ It reads their facial expression, senses the context, and suggests relevant, kin
 
 ---
 
-# Welcome to your Lovable project
+# Welcome
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/7e70c457-390f-43f3-a386-54e031cf4edb
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/7e70c457-390f-43f3-a386-54e031cf4edb) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
+**URL**: https://speak-assist-now.lovable.app/auth
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -79,14 +69,3 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/7e70c457-390f-43f3-a386-54e031cf4edb) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
