@@ -8,25 +8,14 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-
-interface HistoryItem {
-  id: string;
-  phrase: string;
-  created_at: string;
-  context_location: string | null;
-  context_person: string | null;
-  context_time: string | null;
-  phrase_type: string;
-  times_used: number;
-}
+import { usePhraseHistory, PhraseHistoryItem } from "@/hooks/usePhraseHistory";
 
 const History = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
-  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const { history, removeItem } = usePhraseHistory();
 
   // Redirect to auth if not authenticated
   if (!loading && !user) {
@@ -34,43 +23,14 @@ const History = () => {
     return null;
   }
 
-  // Show loading spinner while checking auth or loading history
-  if (loading || isLoadingHistory) {
+  // Show loading spinner while checking auth
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
-
-  // Load real history data from Supabase
-  useEffect(() => {
-    const loadHistory = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('communication_history')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setHistoryItems(data || []);
-      } catch (error) {
-        console.error('Error loading history:', error);
-        toast({
-          title: "Error loading history",
-          description: "Could not load communication history",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingHistory(false);
-      }
-    };
-
-    loadHistory();
-  }, [user, toast]);
 
   const handleSpeakPhrase = (phrase: string) => {
     try {
@@ -100,16 +60,16 @@ const History = () => {
 
   const toggleFavorite = async (id: string) => {
     try {
-      const item = historyItems.find(item => item.id === id);
-      if (!item) return;
+      const item = history.find(item => item.id === id);
+      if (!item || !user) return;
 
       const { error } = await supabase
         .from('favorite_phrases')
         .upsert({
-          user_id: user!.id,
+          user_id: user.id,
           phrase: item.phrase,
-          category: item.phrase_type,
-          times_used: item.times_used,
+          category: item.phraseType || 'custom',
+          times_used: 1,
         });
 
       if (error) throw error;
@@ -154,10 +114,9 @@ const History = () => {
     }
   };
 
-  const formatRelativeTime = (timestamp: string) => {
+  const formatRelativeTime = (timestamp: Date) => {
     const now = new Date();
-    const date = new Date(timestamp);
-    const diff = now.getTime() - date.getTime();
+    const diff = now.getTime() - timestamp.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
 
@@ -167,11 +126,11 @@ const History = () => {
     return `${days} days ago`;
   };
 
-  const groupByDate = (items: HistoryItem[]) => {
-    const groups: { [key: string]: HistoryItem[] } = {};
+  const groupByDate = (items: PhraseHistoryItem[]) => {
+    const groups: { [key: string]: PhraseHistoryItem[] } = {};
     
     items.forEach(item => {
-      const date = new Date(item.created_at).toDateString();
+      const date = item.timestamp.toDateString();
       if (!groups[date]) groups[date] = [];
       groups[date].push(item);
     });
@@ -181,7 +140,7 @@ const History = () => {
     );
   };
 
-  const groupedItems = groupByDate(historyItems);
+  const groupedItems = groupByDate(history);
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -256,12 +215,14 @@ const History = () => {
                               </div>
                               
                               <div className="flex items-center gap-2 flex-wrap">
-                                <Badge className={getCategoryColor(item.phrase_type)}>
-                                  {item.phrase_type}
+                                <Badge className={getCategoryColor(item.phraseType || 'custom')}>
+                                  {item.phraseType || 'custom'}
                                 </Badge>
-                                <Badge variant="outline">
-                                  Used {item.times_used} times
-                                </Badge>
+                                {item.emotion && (
+                                  <Badge variant="secondary">
+                                    {item.emotion}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                             
@@ -291,15 +252,15 @@ const History = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                               <div className="flex items-center gap-2">
                                 <Clock className="h-3 w-3 text-muted-foreground" />
-                                <span>{formatRelativeTime(item.created_at)}</span>
+                                <span>{formatRelativeTime(item.timestamp)}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <MapPin className="h-3 w-3 text-muted-foreground" />
-                                <span>{item.context_location || 'Unknown location'}</span>
+                                <span>{item.location || 'Unknown location'}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <User className="h-3 w-3 text-muted-foreground" />
-                                <span>{item.context_person || 'No person specified'}</span>
+                                <span>{item.person || 'No person specified'}</span>
                               </div>
                             </div>
                           </div>
@@ -309,6 +270,7 @@ const History = () => {
                           variant="ghost" 
                           size="sm" 
                           className="p-1 h-8 w-8 text-muted-foreground flex-shrink-0"
+                          onClick={() => removeItem(item.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -323,7 +285,7 @@ const History = () => {
       </div>
 
       {/* Empty state */}
-      {historyItems.length === 0 && (
+      {history.length === 0 && (
         <Card>
           <CardContent className="p-8 text-center">
             <div className="text-muted-foreground">
