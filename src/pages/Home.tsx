@@ -9,12 +9,11 @@ import { useEchoVoice } from "@/hooks/useEchoVoice";
 import { PersonSelector } from "@/components/PersonSelector";
 import { LocationSelector } from "@/components/LocationSelector";
 import { CustomMessageInput } from "@/components/CustomMessageInput";
-import { EmotionDetector } from "@/components/EmotionDetector";
+import { EmotionSelector } from "@/components/EmotionSelector";
 import { PhraseHistory } from "@/components/PhraseHistory";
 import EmergencyButton from "@/components/EmergencyButton";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useEmotionDetection } from "@/hooks/useEmotionDetection";
 import { useAutoLocation } from "@/hooks/useAutoLocation";
 import { usePhraseHistory } from "@/hooks/usePhraseHistory";
 import { useAppSettings } from "@/hooks/useAppSettings";
@@ -31,7 +30,7 @@ const Home = () => {
   const rippleRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   // Hooks
-  const { currentEmotion } = useEmotionDetection();
+  const [currentEmotion, setCurrentEmotion] = useState<'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised' | 'neutral'>('neutral');
   const { currentTime } = useAutoLocation();
 
   const {
@@ -249,7 +248,10 @@ const Home = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <EmotionDetector />
+                      <EmotionSelector
+                        onEmotionSelect={setCurrentEmotion}
+                        selectedEmotion={currentEmotion}
+                      />
                     </CardContent>
                   </Card>
                 )}
@@ -278,30 +280,21 @@ const Home = () => {
             {/* Manual Context Selection */}
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-foreground">Context Selection</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">People</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <PersonSelector 
-                      onPersonSelect={setCurrentPerson}
-                      selectedPerson={currentPerson}
-                    />
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <PersonSelector 
+                  onPersonSelect={setCurrentPerson}
+                  selectedPerson={currentPerson}
+                />
                 
-                <Card className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">Locations</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <LocationSelector 
-                      onLocationSelect={setCurrentLocation}
-                      selectedLocation={currentLocation}
-                    />
-                  </CardContent>
-                </Card>
+                <LocationSelector 
+                  onLocationSelect={setCurrentLocation}
+                  selectedLocation={currentLocation}
+                />
+                
+                <EmotionSelector
+                  onEmotionSelect={setCurrentEmotion}
+                  selectedEmotion={currentEmotion}
+                />
               </div>
             </div>
 
