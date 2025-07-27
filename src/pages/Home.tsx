@@ -286,12 +286,6 @@ const Home = () => {
             </div>
 
             {/* Manual Context Selection */}
-            {/* AI Emotion Detection */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-foreground">AI Emotion Detection</h2>
-              <EmotionDetector />
-            </div>
-
             {/* Manual Context Selection */}
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-foreground">Context Selection</h2>
