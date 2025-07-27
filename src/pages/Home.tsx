@@ -236,7 +236,7 @@ const Home = () => {
             {/* Context Detection Row */}
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-foreground">Context Detection</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {appSettings.emotionDetection && (
                   <Card className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
