@@ -178,17 +178,13 @@ export const useAutoLocation = () => {
         const result = await navigator.permissions.query({ name: 'geolocation' });
         const newStatus = result.state as 'granted' | 'denied' | 'prompt';
         
-        // If permission status changed from denied/prompt to granted, automatically get location
-        if (newStatus === 'granted' && permissionStatus !== 'granted') {
-          setLocationError(null);
-          getCurrentLocation();
-        }
-        
+        console.log('Permission status:', newStatus);
         setPermissionStatus(newStatus);
         
         // Listen for permission changes
         result.onchange = () => {
           const updatedStatus = result.state as 'granted' | 'denied' | 'prompt';
+          console.log('Permission changed to:', updatedStatus);
           setPermissionStatus(updatedStatus);
           
           if (updatedStatus === 'granted') {
@@ -199,14 +195,21 @@ export const useAutoLocation = () => {
           }
         };
         
-        if (result.state === 'granted') {
+        // If permission is granted, get location immediately
+        if (newStatus === 'granted') {
+          setLocationError(null);
           getCurrentLocation();
         }
       } catch (error) {
         console.error('Permission check failed:', error);
+        // Fallback: try to get location directly if permission API fails
+        getCurrentLocation();
       }
+    } else {
+      // No permission API, try direct location access
+      getCurrentLocation();
     }
-  }, [getCurrentLocation, permissionStatus]);
+  }, [getCurrentLocation]);
 
   // Initialize
   useEffect(() => {
