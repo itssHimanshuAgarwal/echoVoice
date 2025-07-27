@@ -20,6 +20,8 @@ export interface UserSettings {
   speech_speed: number;
   voice_type: 'browser' | 'elevenlabs';
   elevenlabs_voice_id: string;
+  browser_voice_name?: string;
+  browser_voice_gender?: 'male' | 'female';
   save_history: boolean;
   accessibility_large_text: boolean;
   accessibility_reduced_motion: boolean;
@@ -187,8 +189,66 @@ export const useEchoVoice = () => {
     }
   }, [settings.context_detection, toast]);
 
+  // Get available browser voices
+  const getBrowserVoices = useCallback(() => {
+    if (!('speechSynthesis' in window)) return [];
+    return speechSynthesis.getVoices();
+  }, []);
+
+  // Get best voice for gender preference
+  const getBestVoice = useCallback((gender?: 'male' | 'female', voiceName?: string) => {
+    const voices = getBrowserVoices();
+    
+    // If specific voice name is requested, try to find it
+    if (voiceName) {
+      const namedVoice = voices.find(voice => voice.name.includes(voiceName));
+      if (namedVoice) return namedVoice;
+    }
+    
+    // Filter by gender if specified
+    if (gender) {
+      const genderFilteredVoices = voices.filter(voice => {
+        const voiceName = voice.name.toLowerCase();
+        if (gender === 'female') {
+          return voiceName.includes('female') || voiceName.includes('woman') || 
+                 voiceName.includes('samantha') || voiceName.includes('karen') ||
+                 voiceName.includes('moira') || voiceName.includes('tessa');
+        } else {
+          return voiceName.includes('male') || voiceName.includes('man') ||
+                 voiceName.includes('daniel') || voiceName.includes('alex') ||
+                 voiceName.includes('fred') || voiceName.includes('tom');
+        }
+      });
+      
+      if (genderFilteredVoices.length > 0) {
+        // Prefer local voices over online voices
+        const localVoice = genderFilteredVoices.find(voice => voice.localService);
+        return localVoice || genderFilteredVoices[0];
+      }
+    }
+    
+    // Fallback to best quality voice
+    const localVoices = voices.filter(voice => voice.localService);
+    const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
+    
+    return localVoices.find(voice => voice.lang.startsWith('en')) || 
+           englishVoices[0] || 
+           voices[0] || 
+           null;
+  }, [getBrowserVoices]);
+
   const speakPhrase = useCallback(async (text: string, phraseType: string = 'custom') => {
     if (isSpeaking) return;
+    
+    // Check if browser supports speech synthesis
+    if (!('speechSynthesis' in window)) {
+      toast({
+        title: "Speech Not Supported",
+        description: "Your browser doesn't support text-to-speech. Please try using a different browser.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsSpeaking(true);
     try {
@@ -209,11 +269,43 @@ export const useEchoVoice = () => {
         await audio.play();
         audio.addEventListener('ended', () => setIsSpeaking(false));
       } else {
-        // Use browser TTS
+        // Use enhanced browser TTS
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = settings.speech_speed;
+        
+        // Configure voice settings
+        const selectedVoice = getBestVoice(settings.browser_voice_gender, settings.browser_voice_name);
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+          utterance.lang = selectedVoice.lang;
+        } else {
+          utterance.lang = 'en-US'; // Fallback language
+        }
+        
+        // Configure speech parameters for better quality
+        utterance.rate = Math.max(0.5, Math.min(2.0, settings.speech_speed)); // Clamp to valid range
+        utterance.pitch = 1.0; // Natural pitch
+        utterance.volume = 1.0; // Full volume
+        
+        // Set up event listeners
         utterance.onend = () => setIsSpeaking(false);
-        speechSynthesis.speak(utterance);
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error:', event);
+          setIsSpeaking(false);
+          toast({
+            title: "Speech Error",
+            description: "Could not play the phrase. Please try again.",
+            variant: "destructive",
+          });
+        };
+        
+        // Ensure voices are loaded before speaking
+        if (getBrowserVoices().length === 0) {
+          speechSynthesis.addEventListener('voiceschanged', () => {
+            speechSynthesis.speak(utterance);
+          }, { once: true });
+        } else {
+          speechSynthesis.speak(utterance);
+        }
       }
 
       // Save analytics if enabled
@@ -225,11 +317,13 @@ export const useEchoVoice = () => {
       setIsSpeaking(false);
       toast({
         title: "Speech Error",
-        description: "Could not play the phrase",
+        description: settings.voice_type === 'elevenlabs' 
+          ? "ElevenLabs service unavailable. Try switching to browser voice in settings."
+          : "Could not play the phrase. Please check your browser's audio settings.",
         variant: "destructive",
       });
     }
-  }, [settings, isSpeaking, toast]);
+  }, [settings, isSpeaking, toast, getBestVoice]);
 
   const saveAnalytics = useCallback(async (phrase: string, phraseType: string) => {
     try {
@@ -318,7 +412,9 @@ export const useEchoVoice = () => {
   }, [settings, toast]);
 
   const stopSpeaking = useCallback(() => {
-    speechSynthesis.cancel();
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+    }
     setIsSpeaking(false);
   }, []);
 
@@ -422,5 +518,9 @@ export const useEchoVoice = () => {
     refreshLocations,
     setCurrentPerson,
     setCurrentLocation,
+    
+    // Voice utilities
+    getBrowserVoices,
+    getBestVoice,
   };
 };
