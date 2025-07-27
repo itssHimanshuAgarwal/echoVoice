@@ -99,14 +99,14 @@ export const useEmotionDetection = () => {
       // Preprocess the image
       const preprocessed = preprocessImage(canvas, ctx);
       
-      // Simple emotion cycling for actual functionality
+      // Cycle through emotions every 3 seconds
       const emotions: EmotionType[] = ['neutral', 'happy', 'sad'];
       const now = Date.now();
-      const cycleIndex = Math.floor(now / 15000) % emotions.length; // Change every 15 seconds
+      const cycleIndex = Math.floor((now / 3000)) % emotions.length; // Change every 3 seconds
       const detectedEmotion = emotions[cycleIndex];
-      const confidence = 0.85; // Fixed confidence
+      const confidence = 0.85;
       
-      console.log('🎭 EMOTION DETECTED:', detectedEmotion, 'confidence:', confidence);
+      console.log('🎭 EMOTION CYCLE:', cycleIndex, 'DETECTED:', detectedEmotion, 'TIME:', now);
       
       setCurrentEmotion(detectedEmotion);
       setConfidence(confidence);
@@ -125,10 +125,10 @@ export const useEmotionDetection = () => {
     
     setIsDetecting(true);
     
-    // Detect emotion every 15 seconds for more stable demo
+    // Detect emotion every 3 seconds for fast updates
     detectionIntervalRef.current = setInterval(() => {
       detectEmotion();
-    }, 15000);
+    }, 3000);
     
     // Initial detection
     detectEmotion();
