@@ -21,13 +21,12 @@ async function generateAIPhrases(context: any) {
   const now = new Date();
   const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
   const hour = now.getHours();
-  const timeContextDetails = getDetailedTimeContext(hour, dayOfWeek);
   
-  // Create a sophisticated, context-aware prompt
-  let prompt = `You are an advanced AI speech assistant for someone who needs help communicating. The user is currently feeling ${currentEmotion || 'neutral'}`;
+  // Create the exact prompt format you specified
+  let prompt = `You are an empathetic AI speech assistant. The user is currently feeling ${currentEmotion || 'neutral'}`;
   
   if (currentTime) {
-    prompt += `, it is ${currentTime} on ${dayOfWeek}`;
+    prompt += `, it is ${currentTime}`;
   }
   
   if (currentLocation) {
@@ -38,38 +37,22 @@ async function generateAIPhrases(context: any) {
     prompt += `, and ${nearbyPerson} is nearby`;
   }
   
-  prompt += `. Generate 4 diverse, highly contextual phrases that go beyond basic greetings.
-
-CONTEXT REQUIREMENTS:
-- Time: ${timeContextDetails.suggestions}
-- Day: ${dayOfWeek} (consider weekly patterns)
-- Emotion: ${currentEmotion} (deeply personalize for this feeling)
-- Location: ${currentLocation || 'general'} (location-specific needs)
-
-PHRASE CATEGORIES NEEDED:
-1. EMOTIONAL EXPRESSION: A phrase that authentically expresses their current ${currentEmotion} feeling
-2. PRACTICAL NEED: A phrase for requesting something specific to the time/location/situation
-3. SOCIAL CONNECTION: A phrase for meaningful interaction (not just "hello")
-4. PERSONAL CARE: A phrase related to comfort, health, or wellbeing
-
-${toneModifier ? `TONE REQUIREMENTS: ${toneModifier}` : ''}
+  prompt += `. Suggest 3–4 short, emotionally relevant phrases they might want to say. Keep them helpful, polite, and supportive.
 
 Return ONLY this JSON format:
 [
-  {"phrase": "[authentic emotional expression]", "priority": "high", "category": "emotion"},
-  {"phrase": "[specific practical request]", "priority": "high", "category": "needs"},
-  {"phrase": "[meaningful social phrase]", "priority": "medium", "category": "social"},
-  {"phrase": "[personal care/comfort phrase]", "priority": "medium", "category": "care"}
+  {"phrase": "[emotionally appropriate phrase]", "priority": "high", "category": "emotion"},
+  {"phrase": "[contextual phrase]", "priority": "medium", "category": "social"},
+  {"phrase": "[supportive phrase]", "priority": "high", "category": "needs"},
+  {"phrase": "[caring phrase]", "priority": "medium", "category": "care"}
 ]
 
-ADVANCED REQUIREMENTS:
-- Each phrase 4-15 words maximum
-- Avoid generic greetings like "good morning" - be specific and meaningful
-- Consider ${dayOfWeek} context (weekday vs weekend, typical activities)
-- Match the ${currentEmotion} emotion authentically
-- Include practical needs for ${currentLocation || 'current situation'}
-- Make phrases feel personal and genuine, not robotic
-- Consider what someone might realistically need at this specific time/day/emotion
+Requirements:
+- Each phrase must be 4-15 words maximum
+- Emotionally appropriate for feeling ${currentEmotion || 'neutral'}
+- Relevant to the current time and location context
+- Helpful for expressing needs or emotions
+- Make them natural and supportive, not generic
 ${toneModifier ? `- Follow tone: ${toneModifier}` : ''}`;
 
   try {

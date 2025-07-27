@@ -69,33 +69,44 @@ const Home = () => {
     }
   }, [loadInitialData, user]);
 
-  // Force phrase updates when emotion changes
+  // REAL-TIME phrase updates when ANY context changes
   useEffect(() => {
-    console.log('⚡ EMOTION USEEFFECT TRIGGERED - Emotion:', currentEmotion);
+    console.log('🔥 CONTEXT CHANGE DETECTED:');
+    console.log('   - Emotion:', currentEmotion);
+    console.log('   - Location:', currentLocation?.name);
+    console.log('   - Person:', currentPerson?.name);
+    console.log('   - Time:', currentTime?.timeOfDay);
     
     const currentContext = {
       currentEmotion: currentEmotion || 'neutral',
-      currentTime: currentTime ? `${currentTime.currentTime}, ${currentTime.timeOfDay}` : undefined,
-      currentLocation: currentLocation?.name || 'general',
+      currentTime: currentTime ? `${currentTime.currentTime}, ${currentTime.timeOfDay}` : 'current time',
+      currentLocation: currentLocation?.name || 'general location',
       nearbyPerson: currentPerson?.name || undefined,
       toneModifier: getTonePromptModifier(),
     };
     
-    console.log('⚡ FORCING PHRASE GENERATION:', currentContext);
+    console.log('🚀 TRIGGERING FRESH AI GENERATION with:', currentContext);
     generateSuggestions(currentContext);
-  }, [currentEmotion, generateSuggestions, currentTime, currentLocation, currentPerson, getTonePromptModifier]); // Add all dependencies
+  }, [
+    currentEmotion,           // Emotion changes
+    currentLocation?.name,    // Location changes  
+    currentPerson?.name,      // Person changes
+    currentTime?.timeOfDay,   // Time changes
+    generateSuggestions
+  ]);
 
   const refreshSuggestions = () => {
-    // Always generate suggestions now
+    console.log('🔄 MANUAL REFRESH TRIGGERED');
     
     const currentContext = {
-      currentEmotion: currentEmotion || 'neutral', // Always use emotion
-      currentTime: currentTime ? `${currentTime.currentTime}, ${currentTime.timeOfDay}` : undefined,
-      currentLocation: currentLocation?.name || 'general',
+      currentEmotion: currentEmotion || 'neutral',
+      currentTime: currentTime ? `${currentTime.currentTime}, ${currentTime.timeOfDay}` : 'current time',
+      currentLocation: currentLocation?.name || 'general location',
       nearbyPerson: currentPerson?.name || undefined,
       toneModifier: getTonePromptModifier(),
     };
     
+    console.log('🔄 MANUAL REFRESH CONTEXT:', currentContext);
     generateSuggestions(currentContext);
   };
 
