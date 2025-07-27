@@ -69,20 +69,21 @@ const Home = () => {
     }
   }, [loadInitialData, user]);
 
+  // Force phrase updates when emotion changes
   useEffect(() => {
-    // Generate suggestions automatically when context changes
+    console.log('⚡ EMOTION USEEFFECT TRIGGERED - Emotion:', currentEmotion);
+    
     const currentContext = {
-      currentEmotion: currentEmotion || 'neutral', // Always use emotion, don't check settings
+      currentEmotion: currentEmotion || 'neutral',
       currentTime: currentTime ? `${currentTime.currentTime}, ${currentTime.timeOfDay}` : undefined,
       currentLocation: currentLocation?.name || 'general',
       nearbyPerson: currentPerson?.name || undefined,
       toneModifier: getTonePromptModifier(),
     };
     
-    console.log('🔄 EMOTION CHANGED TO:', currentEmotion, '- Generating new phrases...');
-    console.log('🔄 CONTEXT BEING SENT:', currentContext);
+    console.log('⚡ FORCING PHRASE GENERATION:', currentContext);
     generateSuggestions(currentContext);
-  }, [currentEmotion, currentPerson, currentLocation, generateSuggestions, currentTime?.timeOfDay, getTonePromptModifier]);
+  }, [currentEmotion, generateSuggestions, currentTime, currentLocation, currentPerson, getTonePromptModifier]); // Add all dependencies
 
   const refreshSuggestions = () => {
     // Always generate suggestions now
