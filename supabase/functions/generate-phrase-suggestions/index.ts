@@ -22,37 +22,47 @@ async function generateAIPhrases(context: any) {
   const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
   const hour = now.getHours();
   
-  // Create the exact prompt format you specified
+  // Create enhanced location-aware prompt
   let prompt = `You are an empathetic AI speech assistant. The user is currently feeling ${currentEmotion || 'neutral'}`;
   
-  if (currentTime) {
-    prompt += `, it is ${currentTime}`;
-  }
-  
   if (currentLocation) {
-    prompt += ` in the ${currentLocation}`;
+    prompt += `, they are in the ${currentLocation}`;
   }
   
   if (nearbyPerson) {
     prompt += `, and ${nearbyPerson} is nearby`;
   }
   
-  prompt += `. Suggest 3–4 short, emotionally relevant phrases they might want to say. Keep them helpful, polite, and supportive.
+  if (currentTime) {
+    prompt += `. It is ${currentTime}`;
+  }
+
+  prompt += `.
+
+Based on this context, suggest 3–4 short, emotionally intelligent phrases the user might want to say right now.
+
+Use the location to guide the suggestions. For example:
+- If in the Park and sad → suggest comforting outdoor actions like "Let's walk a bit" or "Can we sit on that bench?"
+- If in the Bedroom and sad → suggest cozy, private ideas like "Can we watch a movie?" or "Can we talk for a minute?"
+- If in the Kitchen and happy → suggest food-related activities like "Let's cook something together" or "Should we make a snack?"
+- If in the Hospital and worried → suggest medical context phrases like "Can you explain what's happening?" or "I need reassurance about the procedure"
+
+Keep tone gentle, respectful, and supportive. Avoid repeating suggestions.
 
 Return ONLY this JSON format:
 [
-  {"phrase": "[emotionally appropriate phrase]", "priority": "high", "category": "emotion"},
-  {"phrase": "[contextual phrase]", "priority": "medium", "category": "social"},
-  {"phrase": "[supportive phrase]", "priority": "high", "category": "needs"},
-  {"phrase": "[caring phrase]", "priority": "medium", "category": "care"}
+  {"phrase": "[location-aware emotional phrase]", "priority": "high", "category": "emotion"},
+  {"phrase": "[location-specific social phrase]", "priority": "medium", "category": "social"},
+  {"phrase": "[location-appropriate need phrase]", "priority": "high", "category": "needs"},
+  {"phrase": "[caring phrase for this setting]", "priority": "medium", "category": "care"}
 ]
 
 Requirements:
 - Each phrase must be 4-15 words maximum
 - Emotionally appropriate for feeling ${currentEmotion || 'neutral'}
-- Relevant to the current time and location context
-- Helpful for expressing needs or emotions
-- Make them natural and supportive, not generic
+- MUST consider the specific location context (${currentLocation || 'current location'})
+- Natural phrases someone would actually say in this location
+- Make them contextually relevant, not generic
 ${toneModifier ? `- Follow tone: ${toneModifier}` : ''}`;
 
   try {
@@ -200,16 +210,54 @@ function getFallbackSuggestions(context: any) {
     suggestions.push({ phrase: "I'm getting tired and need rest", priority: "high", category: "care" });
   }
   
-  // Advanced location-based suggestions
+  // Enhanced location-based suggestions
   const locationLower = currentLocation?.toLowerCase() || '';
-  if (locationLower.includes('kitchen')) {
-    suggestions.push({ phrase: "I need help with meals today", priority: "high", category: "needs" });
+  
+  if (locationLower.includes('park') || locationLower.includes('outdoor')) {
+    if (currentEmotion === 'sad') {
+      suggestions.push({ phrase: "Let's walk a bit to clear my mind", priority: "high", category: "needs" });
+      suggestions.push({ phrase: "Can we sit on that bench?", priority: "medium", category: "social" });
+    } else if (currentEmotion === 'happy') {
+      suggestions.push({ phrase: "This fresh air feels wonderful", priority: "medium", category: "emotion" });
+      suggestions.push({ phrase: "Let's enjoy being outside together", priority: "medium", category: "social" });
+    } else {
+      suggestions.push({ phrase: "It's peaceful being outdoors", priority: "medium", category: "emotion" });
+    }
+  } else if (locationLower.includes('kitchen')) {
+    if (currentEmotion === 'happy') {
+      suggestions.push({ phrase: "Let's cook something together", priority: "medium", category: "social" });
+      suggestions.push({ phrase: "Should we make a snack?", priority: "high", category: "needs" });
+    } else if (currentEmotion === 'sad') {
+      suggestions.push({ phrase: "Could you help me with a warm drink?", priority: "high", category: "needs" });
+    } else {
+      suggestions.push({ phrase: "I need help with meals today", priority: "high", category: "needs" });
+    }
   } else if (locationLower.includes('bedroom')) {
-    suggestions.push({ phrase: "I need help getting comfortable", priority: "medium", category: "care" });
+    if (currentEmotion === 'sad') {
+      suggestions.push({ phrase: "Can we watch a movie?", priority: "medium", category: "social" });
+      suggestions.push({ phrase: "Can we talk for a minute?", priority: "high", category: "care" });
+    } else if (currentEmotion === 'fearful') {
+      suggestions.push({ phrase: "Can you stay with me until I fall asleep?", priority: "high", category: "needs" });
+    } else {
+      suggestions.push({ phrase: "I need help getting comfortable", priority: "medium", category: "care" });
+    }
+  } else if (locationLower.includes('hospital') || locationLower.includes('medical')) {
+    if (currentEmotion === 'fearful') {
+      suggestions.push({ phrase: "Can you explain what's happening?", priority: "high", category: "needs" });
+      suggestions.push({ phrase: "I need reassurance about the procedure", priority: "high", category: "care" });
+    } else {
+      suggestions.push({ phrase: "I'm worried about this appointment", priority: "medium", category: "emotion" });
+    }
   } else if (locationLower.includes('bathroom')) {
     suggestions.push({ phrase: "I need assistance with personal care", priority: "high", category: "needs" });
   } else if (locationLower.includes('living')) {
     suggestions.push({ phrase: "Let's spend some quality time together", priority: "medium", category: "social" });
+  } else if (locationLower.includes('vehicle') || locationLower.includes('car')) {
+    if (currentEmotion === 'fearful') {
+      suggestions.push({ phrase: "I'm nervous about this trip", priority: "medium", category: "emotion" });
+    } else {
+      suggestions.push({ phrase: "How long until we arrive?", priority: "medium", category: "social" });
+    }
   }
   
   // Person-specific advanced suggestions
