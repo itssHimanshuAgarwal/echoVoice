@@ -82,9 +82,27 @@ export const AutoLocationDetector = () => {
           </div>
           
           {locationError && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">{locationError}</span>
+            <div className="space-y-3 p-3 rounded-lg bg-destructive/10 text-destructive">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">{locationError}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                <p className="mb-2"><strong>To enable location:</strong></p>
+                <p>1. Click the location icon 📍 in your browser's address bar</p>
+                <p>2. Select "Allow" for location access</p>
+                <p>3. Refresh this page or click the button below</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={refreshLocation}
+                disabled={isLoadingLocation}
+                className="w-full"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
             </div>
           )}
           
