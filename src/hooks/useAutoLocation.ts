@@ -171,12 +171,33 @@ export const useAutoLocation = () => {
     }
   }, [reverseGeocode]);
 
-  // Check permission status
+  // Check permission status and listen for changes
   const checkPermissions = useCallback(async () => {
     if ('permissions' in navigator) {
       try {
         const result = await navigator.permissions.query({ name: 'geolocation' });
-        setPermissionStatus(result.state as 'granted' | 'denied' | 'prompt');
+        const newStatus = result.state as 'granted' | 'denied' | 'prompt';
+        
+        // If permission status changed from denied/prompt to granted, automatically get location
+        if (newStatus === 'granted' && permissionStatus !== 'granted') {
+          setLocationError(null);
+          getCurrentLocation();
+        }
+        
+        setPermissionStatus(newStatus);
+        
+        // Listen for permission changes
+        result.onchange = () => {
+          const updatedStatus = result.state as 'granted' | 'denied' | 'prompt';
+          setPermissionStatus(updatedStatus);
+          
+          if (updatedStatus === 'granted') {
+            setLocationError(null);
+            getCurrentLocation();
+          } else if (updatedStatus === 'denied') {
+            setLocationError('Location access denied. Please enable location permissions.');
+          }
+        };
         
         if (result.state === 'granted') {
           getCurrentLocation();
@@ -185,7 +206,7 @@ export const useAutoLocation = () => {
         console.error('Permission check failed:', error);
       }
     }
-  }, [getCurrentLocation]);
+  }, [getCurrentLocation, permissionStatus]);
 
   // Initialize
   useEffect(() => {
