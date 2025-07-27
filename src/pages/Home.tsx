@@ -9,11 +9,13 @@ import { useEchoVoice } from "@/hooks/useEchoVoice";
 import { PersonSelector } from "@/components/PersonSelector";
 import { LocationSelector } from "@/components/LocationSelector";
 import { CustomMessageInput } from "@/components/CustomMessageInput";
+import { EmotionDetector } from "@/components/EmotionDetector";
 import { EmotionSelector } from "@/components/EmotionSelector";
 import { PhraseHistory } from "@/components/PhraseHistory";
 import EmergencyButton from "@/components/EmergencyButton";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmotionDetection } from "@/hooks/useEmotionDetection";
 import { useAutoLocation } from "@/hooks/useAutoLocation";
 import { usePhraseHistory } from "@/hooks/usePhraseHistory";
 import { useAppSettings } from "@/hooks/useAppSettings";
@@ -30,8 +32,17 @@ const Home = () => {
   const rippleRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   // Hooks
+  // Get emotion from detection hook and sync with manual selection
+  const { currentEmotion: detectedEmotion } = useEmotionDetection();
   const [currentEmotion, setCurrentEmotion] = useState<'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised' | 'neutral'>('neutral');
   const { currentTime } = useAutoLocation();
+
+  // Sync detected emotion with manual selection
+  useEffect(() => {
+    if (detectedEmotion) {
+      setCurrentEmotion(detectedEmotion);
+    }
+  }, [detectedEmotion]);
 
   const {
     isLoading,
@@ -248,10 +259,7 @@ const Home = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <EmotionSelector
-                        onEmotionSelect={setCurrentEmotion}
-                        selectedEmotion={currentEmotion}
-                      />
+                      <EmotionDetector />
                     </CardContent>
                   </Card>
                 )}
@@ -275,6 +283,13 @@ const Home = () => {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            {/* Manual Context Selection */}
+            {/* AI Emotion Detection */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-foreground">AI Emotion Detection</h2>
+              <EmotionDetector />
             </div>
 
             {/* Manual Context Selection */}
