@@ -151,7 +151,8 @@ export const AutoLocationDetector = () => {
         )}
 
         {/* Status */}
-        <div className="text-center text-xs text-muted-foreground">
+        <div className="text-center text-xs text-muted-foreground space-y-1">
+          <div>Status: {permissionStatus} | {isLoadingLocation ? 'Detecting...' : currentLocation ? `✅ ${currentLocation.readableLocation}` : '❌ No location'}</div>
           {isLoadingLocation && 'Detecting location...'}
           {!isLoadingLocation && currentLocation && 'Location detected automatically'}
           {!isLoadingLocation && !currentLocation && !locationError && permissionStatus === 'denied' && 'Location access denied'}
