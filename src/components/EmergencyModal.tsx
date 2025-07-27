@@ -8,9 +8,10 @@ interface EmergencyModalProps {
   isOpen: boolean;
   onClose: () => void;
   triggerType: "rapid-tap" | "long-press";
+  onEmergencyActivated?: (message: string) => void;
 }
 
-const EmergencyModal = ({ isOpen, onClose, triggerType }: EmergencyModalProps) => {
+const EmergencyModal = ({ isOpen, onClose, triggerType, onEmergencyActivated }: EmergencyModalProps) => {
   const { toast } = useToast();
   const [countdown, setCountdown] = useState(10);
   const [isAutoSending, setIsAutoSending] = useState(false);
@@ -36,6 +37,11 @@ const EmergencyModal = ({ isOpen, onClose, triggerType }: EmergencyModalProps) =
   }, [isOpen]);
 
   const handleSendAlert = () => {
+    const emergencyMessage = "Help me please! This is an emergency!";
+    
+    // Trigger TTS and history callback immediately
+    onEmergencyActivated?.(emergencyMessage);
+    
     // Simulate emergency alert
     setIsAutoSending(false);
     
@@ -48,15 +54,15 @@ const EmergencyModal = ({ isOpen, onClose, triggerType }: EmergencyModalProps) =
     // Show success toast
     toast({
       title: "🚨 Emergency Alert Sent!",
-      description: "Your emergency contacts have been notified. Help is on the way.",
+      description: "Help message spoken aloud and logged. Emergency contacts would be notified in a real implementation.",
       duration: 5000,
     });
 
     // In a real app, this would:
-    // - Send SMS to emergency contacts
+    // - Send SMS to emergency contacts via Twilio
     // - Call emergency services if configured
-    // - Send location data
-    // - Log the emergency event
+    // - Send current location data
+    // - Log the emergency event to database
 
     onClose();
   };

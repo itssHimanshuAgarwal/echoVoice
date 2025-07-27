@@ -4,7 +4,11 @@ import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import EmergencyModal from "./EmergencyModal";
 
-const EmergencyButton = () => {
+interface EmergencyButtonProps {
+  onEmergencyActivated?: (message: string) => void;
+}
+
+const EmergencyButton = ({ onEmergencyActivated }: EmergencyButtonProps) => {
   const [showModal, setShowModal] = useState(false);
   const [isLongPress, setIsLongPress] = useState(false);
   const [tapCount, setTapCount] = useState(0);
@@ -133,6 +137,7 @@ const EmergencyButton = () => {
         isOpen={showModal} 
         onClose={() => setShowModal(false)} 
         triggerType={isLongPress ? "long-press" : "rapid-tap"}
+        onEmergencyActivated={onEmergencyActivated}
       />
     </>
   );

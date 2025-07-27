@@ -13,6 +13,7 @@ import { EmotionDetector } from "@/components/EmotionDetector";
 import { AutoLocationDetector } from "@/components/AutoLocationDetector";
 import { FaceRecognition } from "@/components/FaceRecognition";
 import { PhraseHistory } from "@/components/PhraseHistory";
+import EmergencyButton from "@/components/EmergencyButton";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmotionDetection } from "@/hooks/useEmotionDetection";
@@ -159,6 +160,48 @@ const Home = () => {
   
   const handleCustomPhraseSpoken = (phrase: string, emotion?: string, location?: string, person?: string, phraseType?: string) => {
     addToHistory(phrase, emotion, location, person, phraseType);
+  };
+  
+  const handleEmergencyActivated = async (message: string) => {
+    // Add to history with emergency context
+    addToHistory(
+      message,
+      currentEmotion || 'urgent',
+      autoLocation?.readableLocation || currentLocation?.name || 'unknown location',
+      nearbyPerson || currentPerson?.name || 'no one nearby',
+      'emergency'
+    );
+    
+    // Speak the emergency message with high volume and urgency
+    try {
+      if ('speechSynthesis' in window) {
+        // Use browser TTS for emergency (more reliable than API)
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.rate = 0.9; // Slightly slower for clarity
+        utterance.pitch = 1.2; // Higher pitch for urgency
+        utterance.volume = 1.0; // Maximum volume
+        utterance.lang = 'en-US';
+        
+        // Get a clear, authoritative voice
+        const voices = speechSynthesis.getVoices();
+        const preferredVoice = voices.find(voice => 
+          voice.name.includes('Female') || voice.name.includes('Karen') || voice.name.includes('Samantha')
+        ) || voices[0];
+        
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+        }
+        
+        speechSynthesis.speak(utterance);
+      } else {
+        // Fallback to regular TTS system
+        await speakPhrase(message, 'emergency');
+      }
+    } catch (error) {
+      console.error('Emergency TTS failed:', error);
+      // Ensure we still try the regular TTS as backup
+      await speakPhrase(message, 'emergency');
+    }
   };
 
   const createRipple = (event: React.MouseEvent, cardId: number) => {
@@ -469,6 +512,9 @@ const Home = () => {
           <SettingsPanel />
         </div>
       </div>
+      
+      {/* Emergency Button - Fixed positioning */}
+      <EmergencyButton onEmergencyActivated={handleEmergencyActivated} />
     </div>
   );
 };

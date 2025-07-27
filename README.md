@@ -1,3 +1,22 @@
+# EchoVoice
+
+## Purpose
+
+**EchoVoice helps non-verbal users speak with emotional nuance.**
+
+It reads their facial expression, senses the context, and suggests relevant, kind phrases. It doesn't replace humans — it augments their ability to express themselves.
+
+### Key Features
+- 🎭 **Emotion Detection**: Reads facial expressions to understand emotional state
+- 📍 **Location Awareness**: Uses GPS and context to suggest appropriate phrases
+- 👥 **Person Recognition**: Identifies nearby people for personalized communication
+- 🤖 **AI-Powered Suggestions**: Generates contextually relevant phrases using Google AI
+- 🔊 **Text-to-Speech**: High-quality voice output with ElevenLabs integration
+- 📱 **Accessible Design**: Simple, touch-friendly interface for all users
+- 🚨 **Emergency Support**: Quick access to emergency communication
+
+---
+
 # Welcome to your Lovable project
 
 ## Project info
