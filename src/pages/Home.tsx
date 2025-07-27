@@ -72,7 +72,7 @@ const Home = () => {
   useEffect(() => {
     // Generate suggestions automatically when context changes
     const currentContext = {
-      currentEmotion: appSettings.emotionDetection ? (currentEmotion || 'neutral') : 'neutral',
+      currentEmotion: currentEmotion || 'neutral', // Always use emotion, don't check settings
       currentTime: currentTime ? `${currentTime.currentTime}, ${currentTime.timeOfDay}` : undefined,
       currentLocation: currentLocation?.name || 'general',
       nearbyPerson: currentPerson?.name || undefined,
@@ -80,14 +80,15 @@ const Home = () => {
     };
     
     console.log('🔄 EMOTION CHANGED TO:', currentEmotion, '- Generating new phrases...');
+    console.log('🔄 CONTEXT BEING SENT:', currentContext);
     generateSuggestions(currentContext);
-  }, [currentEmotion, currentPerson, currentLocation, generateSuggestions, currentTime?.timeOfDay, appSettings.emotionDetection, getTonePromptModifier]);
+  }, [currentEmotion, currentPerson, currentLocation, generateSuggestions, currentTime?.timeOfDay, getTonePromptModifier]);
 
   const refreshSuggestions = () => {
     // Always generate suggestions now
     
     const currentContext = {
-      currentEmotion: appSettings.emotionDetection ? (currentEmotion || 'neutral') : 'neutral',
+      currentEmotion: currentEmotion || 'neutral', // Always use emotion
       currentTime: currentTime ? `${currentTime.currentTime}, ${currentTime.timeOfDay}` : undefined,
       currentLocation: currentLocation?.name || 'general',
       nearbyPerson: currentPerson?.name || undefined,

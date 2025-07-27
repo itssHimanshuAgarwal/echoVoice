@@ -159,12 +159,15 @@ export const useEchoVoice = () => {
     setIsLoading(true);
     try {
       console.log('🚀 CALLING EDGE FUNCTION with context:', context);
+      console.log('🔥 STARTING PHRASE GENERATION...');
       
       const { data, error } = await supabase.functions.invoke('generate-phrase-suggestions', {
         body: { context }
       });
 
       console.log('📩 EDGE FUNCTION RESPONSE:', { data, error });
+      console.log('📊 Raw data:', data);
+      console.log('❌ Any error:', error);
 
       if (error) {
         console.error('❌ Edge function error:', error);
@@ -173,6 +176,7 @@ export const useEchoVoice = () => {
       
       const suggestions = data?.suggestions || [];
       console.log('✅ NEW SUGGESTIONS RECEIVED:', suggestions);
+      console.log('📝 Setting suggestions to state...');
       setSuggestions(suggestions);
       
       if (suggestions.length === 0) {
