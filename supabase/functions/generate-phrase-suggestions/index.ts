@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 async function generateAIPhrases(context: any) {
-  const { currentEmotion, currentTime, currentLocation, nearbyPerson } = context;
+  const { currentEmotion, currentTime, currentLocation, nearbyPerson, toneModifier } = context;
   const apiKey = Deno.env.get('GOOGLE_AI_API_KEY');
   
   console.log('Starting AI phrase generation with context:', context);
@@ -17,7 +17,7 @@ async function generateAIPhrases(context: any) {
     return getFallbackSuggestions(context);
   }
 
-  // Create an empathetic, context-aware prompt
+  // Create an empathetic, context-aware prompt with tone settings
   let prompt = `You are an empathetic AI speech assistant. The user is currently feeling ${currentEmotion || 'neutral'}`;
   
   if (currentTime) {
@@ -34,6 +34,8 @@ async function generateAIPhrases(context: any) {
   
   prompt += `. Suggest 3–4 short, emotionally relevant phrases they might want to say. Keep them helpful, polite, and supportive.
 
+${toneModifier ? `TONE REQUIREMENTS: ${toneModifier}` : ''}
+
 Return ONLY this JSON format:
 [
   {"phrase": "[emotionally appropriate phrase]", "priority": "high", "category": "emotion"},
@@ -47,7 +49,8 @@ Requirements:
 - Emotionally appropriate for feeling ${currentEmotion || 'neutral'}
 - Relevant to the current time and location context
 - Helpful for expressing needs or emotions
-- Keep them natural and supportive`;
+- Keep them natural and supportive
+${toneModifier ? `- Follow the tone requirements: ${toneModifier}` : ''}`;
 
   try {
     console.log('Calling Google AI with enhanced prompt');

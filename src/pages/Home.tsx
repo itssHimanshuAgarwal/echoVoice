@@ -19,6 +19,8 @@ import { useEmotionDetection } from "@/hooks/useEmotionDetection";
 import { useAutoLocation } from "@/hooks/useAutoLocation";
 import { useFaceRecognition } from "@/hooks/useFaceRecognition";
 import { usePhraseHistory } from "@/hooks/usePhraseHistory";
+import { useAppSettings } from "@/hooks/useAppSettings";
+import { SettingsPanel } from "@/components/SettingsPanel";
 import { Loader2, Brain } from "lucide-react";
 
 const Home = () => {
@@ -53,6 +55,7 @@ const Home = () => {
   } = useEchoVoice();
   
   const { addToHistory } = usePhraseHistory();
+  const { settings: appSettings, getTonePromptModifier } = useAppSettings();
 
   // Dynamic context data based on selections and auto-detection
   const contextData = {
@@ -80,23 +83,31 @@ const Home = () => {
   }, [loadInitialData, user]);
 
   useEffect(() => {
+    // Only generate suggestions if detection features are enabled
+    if (!appSettings.emotionDetection && !appSettings.locationDetection) return;
+    
     // Generate suggestions when context changes
     const currentContext = {
-      currentEmotion: currentEmotion || 'neutral',
+      currentEmotion: appSettings.emotionDetection ? (currentEmotion || 'neutral') : undefined,
       currentTime: autoTime?.currentTime ? `${autoTime.currentTime}, ${autoTime.timeOfDay}` : undefined,
-      currentLocation: autoLocation?.readableLocation || currentLocation?.name || 'general',
+      currentLocation: appSettings.locationDetection ? (autoLocation?.readableLocation || currentLocation?.name || 'general') : undefined,
       nearbyPerson: nearbyPerson || currentPerson?.name || undefined,
+      toneModifier: getTonePromptModifier(),
     };
     
     generateSuggestions(currentContext);
-  }, [currentPerson, currentLocation, generateSuggestions, autoTime?.timeOfDay, autoTime?.currentTime, autoLocation?.readableLocation, currentEmotion, nearbyPerson]);
+  }, [currentPerson, currentLocation, generateSuggestions, autoTime?.timeOfDay, autoTime?.currentTime, autoLocation?.readableLocation, currentEmotion, nearbyPerson, appSettings, getTonePromptModifier]);
 
   const refreshSuggestions = () => {
+    // Only generate suggestions if detection features are enabled
+    if (!appSettings.emotionDetection && !appSettings.locationDetection) return;
+    
     const currentContext = {
-      currentEmotion: currentEmotion || 'neutral',
+      currentEmotion: appSettings.emotionDetection ? (currentEmotion || 'neutral') : undefined,
       currentTime: autoTime?.currentTime ? `${autoTime.currentTime}, ${autoTime.timeOfDay}` : undefined,
-      currentLocation: autoLocation?.readableLocation || currentLocation?.name || 'general',
+      currentLocation: appSettings.locationDetection ? (autoLocation?.readableLocation || currentLocation?.name || 'general') : undefined,
       nearbyPerson: nearbyPerson || currentPerson?.name || undefined,
+      toneModifier: getTonePromptModifier(),
     };
     
     generateSuggestions(currentContext);
@@ -217,8 +228,8 @@ const Home = () => {
           onLocationSelect={setCurrentLocation}
           selectedLocation={currentLocation}
         />
-        <EmotionDetector />
-        <AutoLocationDetector />
+        {appSettings.emotionDetection && <EmotionDetector />}
+        {appSettings.locationDetection && <AutoLocationDetector />}
         <FaceRecognition />
       </div>
 
@@ -452,9 +463,10 @@ const Home = () => {
       />
         </div>
         
-        {/* Sidebar with History */}
+        {/* Sidebar with History and Settings */}
         <div className="xl:col-span-1 space-y-8">
           <PhraseHistory onSpeakPhrase={handleSpeakPhrase} />
+          <SettingsPanel />
         </div>
       </div>
     </div>

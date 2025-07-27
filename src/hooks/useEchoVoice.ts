@@ -7,6 +7,7 @@ export interface PhraseContext {
   currentTime?: string;
   currentLocation?: string;
   nearbyPerson?: string;
+  toneModifier?: string;
 }
 
 export interface PhraseSuggestion {
