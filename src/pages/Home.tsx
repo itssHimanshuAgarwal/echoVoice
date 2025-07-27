@@ -11,10 +11,12 @@ import { LocationSelector } from "@/components/LocationSelector";
 import { CustomMessageInput } from "@/components/CustomMessageInput";
 import { EmotionDetector } from "@/components/EmotionDetector";
 import { AutoLocationDetector } from "@/components/AutoLocationDetector";
+import { FaceRecognition } from "@/components/FaceRecognition";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmotionDetection } from "@/hooks/useEmotionDetection";
 import { useAutoLocation } from "@/hooks/useAutoLocation";
+import { useFaceRecognition } from "@/hooks/useFaceRecognition";
 import { Loader2, Brain } from "lucide-react";
 
 const Home = () => {
@@ -29,6 +31,7 @@ const Home = () => {
   const { user } = useAuth();
   const { currentEmotion } = useEmotionDetection();
   const { currentLocation: autoLocation, currentTime: autoTime } = useAutoLocation();
+  const { nearbyPerson } = useFaceRecognition();
   const {
     isLoading,
     isSpeaking,
@@ -52,7 +55,7 @@ const Home = () => {
     time: autoTime?.currentTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     timeOfDay: autoTime?.timeOfDay || 'unknown',
     location: autoLocation?.readableLocation || currentLocation?.name || "No location",
-    detectedPerson: currentPerson?.name || "No one selected",
+    detectedPerson: nearbyPerson || currentPerson?.name || "No one selected",
     emotion: currentEmotion
   };
 
@@ -77,19 +80,19 @@ const Home = () => {
     const currentContext = {
       timeOfDay: autoTime?.timeOfDay || (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
       location: autoLocation?.readableLocation || currentLocation?.name || 'general',
-      person: currentPerson?.name || undefined,
+      person: nearbyPerson || currentPerson?.name || undefined,
       style: currentPerson?.communication_style || settings.communication_style,
       emotion: currentEmotion,
     };
     
     generateSuggestions(currentContext);
-  }, [currentPerson, currentLocation, settings.communication_style, generateSuggestions, autoTime?.timeOfDay, autoLocation?.readableLocation, currentEmotion]);
+  }, [currentPerson, currentLocation, settings.communication_style, generateSuggestions, autoTime?.timeOfDay, autoLocation?.readableLocation, currentEmotion, nearbyPerson]);
 
   const refreshSuggestions = () => {
     const currentContext = {
       timeOfDay: autoTime?.timeOfDay || (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
       location: autoLocation?.readableLocation || currentLocation?.name || 'general',
-      person: currentPerson?.name || undefined,
+      person: nearbyPerson || currentPerson?.name || undefined,
       style: currentPerson?.communication_style || settings.communication_style,
       emotion: currentEmotion,
     };
@@ -177,7 +180,7 @@ const Home = () => {
       </div>
 
       {/* Dynamic Context Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-5 gap-6">
         <PersonSelector 
           onPersonSelect={setCurrentPerson}
           selectedPerson={currentPerson}
@@ -188,6 +191,7 @@ const Home = () => {
         />
         <EmotionDetector />
         <AutoLocationDetector />
+        <FaceRecognition />
       </div>
 
       {/* Current Context Display */}
@@ -196,7 +200,7 @@ const Home = () => {
           <CardTitle className="text-lg font-display">Current Context</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border/30 shadow-[var(--shadow-soft)]">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <Clock className="h-5 w-5 text-primary" />
@@ -220,7 +224,7 @@ const Home = () => {
                 <User className="h-5 w-5 text-success" />
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">With</div>
+                <div className="text-sm text-muted-foreground">Person {nearbyPerson ? '(Detected)' : '(Manual)'}</div>
                 <div className="font-medium">{contextData.detectedPerson}</div>
               </div>
             </div>
